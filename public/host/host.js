@@ -135,7 +135,7 @@ function updateButtons(phase) {
       rollDiceBtn.style.display = 'block';
       rollDiceBtn.disabled = true;
       break;
-    case 'category-reveal':
+    case 'waiting-draw':
       drawCardBtn.style.display = 'block';
       drawCardBtn.disabled = false;
       break;
@@ -178,7 +178,7 @@ const phaseLabels = {
   'setup': 'Setup',
   'player-turn': 'Waiting to roll',
   'rolling': 'Rolling dice...',
-  'category-reveal': 'Category revealed!',
+  'waiting-draw': 'Ready to reveal card',
   'card-reveal': 'Card shown',
   'timer-running': 'Timer running',
   'turn-end': 'Turn complete'
@@ -234,7 +234,7 @@ async function fetchCardCounts() {
 socket.on('state-sync', (s) => updateUI(s));
 socket.on('game-started', (data) => updateUI(data.state));
 socket.on('dice-result', (data) => updateUI(data.state));
-socket.on('category-revealed', (data) => updateUI(data.state));
+socket.on('dice-settled', (data) => updateUI(data.state));
 let lastCardHasTimer = false;
 socket.on('card-drawn', (data) => {
   lastCardHasTimer = !!(data.card && data.card.timer);

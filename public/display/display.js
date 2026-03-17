@@ -17,20 +17,17 @@ const screens = {
   setup: document.getElementById('setupScreen'),
   playerTurn: document.getElementById('playerTurnScreen'),
   dice: document.getElementById('diceScreen'),
-  category: document.getElementById('categoryScreen'),
+  waitDraw: document.getElementById('waitDrawScreen'),
   card: document.getElementById('cardScreen'),
   timer: document.getElementById('timerScreen'),
   turnEnd: document.getElementById('turnEndScreen')
 };
 
 const diceCube = document.getElementById('diceCube');
-const diceResultLabel = document.getElementById('diceResultLabel');
 const turnPlayerName = document.getElementById('turnPlayerName');
 const roundInfo = document.getElementById('roundInfo');
 const dicePlayerName = document.getElementById('dicePlayerName');
-const categoryPlayer = document.getElementById('categoryPlayer');
-const categoryIcon = document.getElementById('categoryIcon');
-const categoryName = document.getElementById('categoryName');
+const waitDrawPlayer = document.getElementById('waitDrawPlayer');
 const cardFullscreen = document.getElementById('cardFullscreen');
 const cardTopBar = document.getElementById('cardTopBar');
 const cardCatIcon = document.getElementById('cardCatIcon');
@@ -69,21 +66,20 @@ function buildDiceFaces() {
 
 // Show screen
 function showScreen(name) {
-  Object.values(screens).forEach(s => s.classList.remove('active'));
+  Object.values(screens).forEach(s => { if (s) s.classList.remove('active'); });
   if (screens[name]) screens[name].classList.add('active');
 }
 
 // 3D dice roll animation - 3 phases for maximum suspense
+// Category is NOT revealed after dice — no text label shown
 function animateDice(roll) {
   showScreen('dice');
   dicePlayerName.textContent = currentPlayer;
-  diceResultLabel.classList.remove('visible');
 
   const scene = document.querySelector('.dice-scene');
   scene.classList.add('rolling-glow');
   scene.classList.remove('bounce');
 
-  const cat = categories.find(c => c.id === roll);
   const target = faceRotations[roll];
 
   // Phase 1: Wild fast chaotic tumble
@@ -140,45 +136,61 @@ function animateDice(roll) {
     scene.classList.add('bounce');
   }, 6200);
 
-  // Show result label after everything settles (at ~7s)
-  setTimeout(() => {
-    if (cat) {
-      diceResultLabel.innerHTML = `<span style="color:${cat.color}">${cat.icon} ${cat.name}</span>`;
-      diceResultLabel.classList.add('visible');
-    }
-  }, 6800);
+  // No category label shown — dice just settles, suspense builds
 }
 
-// Category reveal
-function showCategory(category) {
-  showScreen('category');
-  categoryPlayer.textContent = currentPlayer + "'s category";
-  categoryIcon.textContent = category.icon;
-  categoryName.textContent = category.name;
-  categoryName.style.color = category.color;
-  categoryIcon.style.textShadow = `0 0 60px ${category.color}`;
-  screens.category.style.background = `radial-gradient(circle at center, ${category.color}15 0%, #0a0a1a 70%)`;
+// Waiting for host to press "Reveal Card"
+function showWaitDraw() {
+  showScreen('waitDraw');
+  waitDrawPlayer.textContent = currentPlayer;
 }
 
-// Card reveal (full screen)
+// Card reveal (full screen) — category shown here for the first time
+// Wild cards show "WILD" instead of category
 function showCard(card) {
   showScreen('card');
 
   const cat = card.category;
-  cardFullscreen.style.background = `radial-gradient(circle at center, ${cat.color}20 0%, #0a0a1a 60%)`;
-  cardTopBar.style.color = cat.color;
-  cardCatIcon.textContent = cat.icon;
-  cardCatName.textContent = cat.name;
+  const isWild = card.isWild;
+  const isILoveYou = card.isILoveYou;
+
+  if (isWild) {
+    // Wild card — no category, just "WILD" styling
+    cardFullscreen.style.background = 'radial-gradient(circle at center, #FFD70030 0%, #0a0a1a 60%)';
+    cardTopBar.style.color = '#FFD700';
+    cardCatIcon.textContent = '\ud83c\udccf';
+    cardCatName.textContent = 'WILD';
+  } else if (isILoveYou) {
+    // I Love You card
+    cardFullscreen.style.background = 'radial-gradient(circle at center, #FF69B430 0%, #0a0a1a 60%)';
+    cardTopBar.style.color = '#FF69B4';
+    cardCatIcon.textContent = '\u2764\ufe0f';
+    cardCatName.textContent = 'I LOVE YOU';
+  } else {
+    // Normal card — show category
+    cardFullscreen.style.background = `radial-gradient(circle at center, ${cat.color}20 0%, #0a0a1a 60%)`;
+    cardTopBar.style.color = cat.color;
+    cardCatIcon.textContent = cat.icon;
+    cardCatName.textContent = cat.name;
+  }
+
   cardPlayerTag.textContent = currentPlayer;
 
   // Format card text - preserve line breaks
-  cardMainText.innerHTML = card.text.replace(/\n/g, '<br>');
+  // For wild/ILY cards, strip the prefix since we show it in the top bar
+  let displayText = card.text;
+  if (isWild) {
+    displayText = displayText.replace(/^\ud83c\udccf\s*WILD\s*\n*/, '');
+  } else if (isILoveYou) {
+    displayText = displayText.replace(/^\u2764\ufe0f\s*I LOVE YOU\s*\n*/, '');
+  }
+  cardMainText.innerHTML = displayText.replace(/\n/g, '<br>');
 
   // Show tone if present
   if (card.tone) {
     cardTone.textContent = 'TONE: ' + card.tone.toUpperCase();
     cardTone.style.display = 'block';
-    cardTone.style.color = cat.color;
+    cardTone.style.color = isWild ? '#FFD700' : isILoveYou ? '#FF69B4' : cat.color;
   } else {
     cardTone.style.display = 'none';
   }
@@ -241,8 +253,8 @@ socket.on('state-sync', (state) => {
     turnPlayerName.textContent = currentPlayer;
     roundInfo.textContent = 'Round ' + (state.round || 1);
     showScreen('playerTurn');
-  } else if (state.phase === 'category-reveal' && state.lastCategory) {
-    showCategory(state.lastCategory);
+  } else if (state.phase === 'waiting-draw') {
+    showWaitDraw();
   } else if (state.phase === 'card-reveal' && state.lastCard) {
     showCard(state.lastCard);
   } else if (state.phase === 'turn-end') {
@@ -264,8 +276,9 @@ socket.on('dice-result', (data) => {
   }
 });
 
-socket.on('category-revealed', (data) => {
-  showCategory(data.category);
+// Dice has settled — show waiting screen
+socket.on('dice-settled', () => {
+  showWaitDraw();
 });
 
 socket.on('card-drawn', (data) => {

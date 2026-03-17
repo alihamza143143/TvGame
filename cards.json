@@ -12,7 +12,6 @@
         { "text": "CALL THE LAST NUMBER YOU CALLED\n\nSay:\n\"Quick question.\nWhat are the last 4 digits of your Social Security number?\"", "timer": 60 },
         { "text": "CALL THE LAST PERSON YOU TEXTED\n\nSay:\n\"I'm in the drive-thru at Wendy's.\nI don't have any money.\nCan you screenshot your debit card front and back?\"", "tone": "Stuttering", "timer": 60 },
         { "text": "CALL MOM\n\nSay:\n\"Did the condom break?\"", "tone": "Soft", "timer": 60 },
-        { "text": "CALL WEST END SDA CHURCH\n404-755-5927\nOR ST MARY'S CATHOLIC CHURCH\n847-888-2828\n\nSay:\n\"As a new member, can I use Carlo Rossi wine when communion is given?\"", "timer": 60 },
         { "text": "CALL THE 3RD TO THE LAST PERSON WHO CALLED YOU\n\nSay:\n\"I had a dream we got married.\nDo you want to get married?\"", "timer": 60 },
         { "text": "CALL THE LAST PERSON YOU TEXTED\n\nSay:\n\"Can you Cash App me $50?\nI need to buy some herb.\"", "tone": "Crying", "timer": 60 },
         { "text": "CALL THE FIRST PERSON YOU TEXTED YESTERDAY\n\nSay:\n\"Can you Instacart me some tampons?\"", "timer": 60 },
@@ -36,6 +35,7 @@
         { "text": "CALL POPEYES\n1-877-767-3937 / 713-655-0660\n\nSay:\n\"Can I bring a whole chicken cut up, and y'all fry it in your batter?\"", "timer": 60 },
         { "text": "CALL HILTON HOTELS\n1-800-445-8667\n\nSay:\n\"Can I use someone else's credit card and it be our little secret?\"", "timer": 60 },
         { "text": "CALL ANYTIME FITNESS 424-277-9000\nOR LM FITNESS CENTER 323-660-0050\n\nSay:\n\"Can I cancel my membership, but still keep using the showers?\"", "timer": 60 },
+        { "text": "CALL WEST END SDA CHURCH\n404-755-5927\nOR ST MARY'S CATHOLIC CHURCH\n847-888-2828\n\nSay:\n\"As a new member, can I use Carlo Rossi wine when communion is given?\"", "timer": 60 },
         { "text": "\ud83c\udccf WILD\n\nTHE PERSON TO YOUR LEFT MUST TAKE A DOUBLE SHOT" },
         { "text": "\u2764\ufe0f I LOVE YOU\n\nCALL SUBWAY GUEST CARE\n1-800-888-4848\n\nSay only:\n\"I LOVE YOU\"", "timer": 60 }
       ]
