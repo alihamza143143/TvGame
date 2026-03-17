@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TV Party Game - Host</title>
+  <link rel="stylesheet" href="host.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🎮 Host Controls</h1>
+      <div class="connection-status" id="connectionStatus">Connecting...</div>
+    </header>
+
+    <section class="players-section">
+      <h2>Players</h2>
+      <div id="playerList" class="player-list"></div>
+      <button id="addPlayerBtn" class="btn btn-small">+ Add Player</button>
+      <div class="current-player">
+        Now playing: <strong id="currentPlayerName">—</strong>
+      </div>
+    </section>
+
+    <section class="controls-section">
+      <button id="rollDiceBtn" class="btn btn-primary btn-large">🎲 Roll Dice</button>
+      <button id="drawCardBtn" class="btn btn-secondary btn-large" disabled>🃏 Draw Card</button>
+      <button id="nextPlayerBtn" class="btn btn-accent btn-large">➡️ Next Player</button>
+      <button id="resetGameBtn" class="btn btn-danger btn-small">🔄 Reset Game</button>
+    </section>
+
+    <section class="status-section">
+      <div class="status-item">
+        <span class="label">Last Roll:</span>
+        <span id="lastRoll" class="value">—</span>
+      </div>
+      <div class="status-item">
+        <span class="label">Category:</span>
+        <span id="lastCategory" class="value">—</span>
+      </div>
+      <div class="status-item">
+        <span class="label">Last Card:</span>
+        <span id="lastCard" class="value">—</span>
+      </div>
+    </section>
+
+    <section class="cards-section">
+      <h2>Cards Remaining</h2>
+      <div id="cardCounts" class="card-counts"></div>
+    </section>
+
+    <div id="errorMsg" class="error-msg" style="display:none;"></div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="host.js"></script>
+</body>
+</html>

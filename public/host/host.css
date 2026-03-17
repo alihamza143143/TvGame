@@ -1,0 +1,212 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #1a1a2e;
+  color: #eee;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #333;
+}
+
+header h1 {
+  font-size: 1.4rem;
+}
+
+.connection-status {
+  font-size: 0.85rem;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: #555;
+}
+
+.connection-status.connected {
+  background: #2ECC71;
+  color: #000;
+}
+
+.connection-status.disconnected {
+  background: #E74C3C;
+}
+
+h2 {
+  font-size: 1rem;
+  margin-bottom: 10px;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Players */
+.players-section {
+  margin-bottom: 24px;
+}
+
+.player-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.player-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.player-row input {
+  flex: 1;
+  padding: 8px 12px;
+  background: #16213e;
+  border: 1px solid #333;
+  color: #eee;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.player-row .remove-btn {
+  background: #E74C3C;
+  border: none;
+  color: white;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.current-player {
+  margin-top: 10px;
+  font-size: 1.1rem;
+  color: #F39C12;
+}
+
+/* Buttons */
+.btn {
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: transform 0.1s, opacity 0.2s;
+}
+
+.btn:active {
+  transform: scale(0.96);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-small {
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  background: #333;
+  color: #eee;
+}
+
+.btn-large {
+  padding: 16px 24px;
+  font-size: 1.2rem;
+  width: 100%;
+}
+
+.btn-primary {
+  background: #E74C3C;
+  color: white;
+}
+
+.btn-secondary {
+  background: #3498DB;
+  color: white;
+}
+
+.btn-accent {
+  background: #2ECC71;
+  color: #000;
+}
+
+.btn-danger {
+  background: #555;
+  color: #E74C3C;
+  border: 1px solid #E74C3C;
+}
+
+/* Controls */
+.controls-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+/* Status */
+.status-section {
+  background: #16213e;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.status-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+}
+
+.status-item .label {
+  color: #888;
+}
+
+.status-item .value {
+  font-weight: 600;
+}
+
+/* Card counts */
+.card-counts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.card-count-item {
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  display: flex;
+  justify-content: space-between;
+  background: #16213e;
+}
+
+.card-count-item .cat-name {
+  font-weight: 600;
+}
+
+/* Error */
+.error-msg {
+  background: #E74C3C;
+  color: white;
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 16px;
+  text-align: center;
+}

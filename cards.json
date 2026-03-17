@@ -1,0 +1,82 @@
+{
+  "categories": [
+    {
+      "id": 1,
+      "name": "Trivia",
+      "color": "#E74C3C",
+      "icon": "🧠",
+      "cards": [
+        { "text": "What year was the first Super Bowl played?" },
+        { "text": "Name 3 countries in South America in 10 seconds" },
+        { "text": "What planet is known as the Red Planet?" },
+        { "text": "How many bones are in the adult human body?" },
+        { "text": "What is the capital of Australia?" }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Dare",
+      "color": "#3498DB",
+      "icon": "🎯",
+      "cards": [
+        { "text": "Do your best celebrity impression for 15 seconds" },
+        { "text": "Sing the chorus of any song right now" },
+        { "text": "Talk in an accent for the next 2 rounds" },
+        { "text": "Do 10 pushups right now" },
+        { "text": "Let the group pick a song — you have to dance to it for 20 seconds" }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Social",
+      "color": "#2ECC71",
+      "icon": "🍻",
+      "cards": [
+        { "text": "Everyone who has traveled to another continent — drink!" },
+        { "text": "Point to the person most likely to survive a zombie apocalypse" },
+        { "text": "Everyone who has been skydiving — drink!" },
+        { "text": "The last person to raise their hand takes a drink" },
+        { "text": "Everyone born in the summer — drink!" }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Wildcard",
+      "color": "#F39C12",
+      "icon": "🃏",
+      "cards": [
+        { "text": "Swap seats with someone at another table" },
+        { "text": "The host picks someone — they must tell an embarrassing story" },
+        { "text": "Rock Paper Scissors tournament — loser drinks" },
+        { "text": "Everyone puts their phone in the middle. First to grab theirs drinks" },
+        { "text": "Group photo time! Strike a pose!" }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Versus",
+      "color": "#9B59B6",
+      "icon": "⚔️",
+      "cards": [
+        { "text": "Arm wrestling match — the two team captains face off!" },
+        { "text": "Staring contest — first to blink loses" },
+        { "text": "Who can hold their breath the longest?" },
+        { "text": "Thumb war! Best of 3 wins" },
+        { "text": "Each team picks a champion — trivia speed round!" }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "Hot Take",
+      "color": "#E67E22",
+      "icon": "🔥",
+      "cards": [
+        { "text": "Pineapple on pizza — yes or no? Majority rules, losers drink" },
+        { "text": "Is a hot dog a sandwich? Debate for 30 seconds" },
+        { "text": "What is the most overrated movie of all time?" },
+        { "text": "Would you rather fight 100 duck-sized horses or 1 horse-sized duck?" },
+        { "text": "What is the worst pizza topping? Group must agree" }
+      ]
+    }
+  ]
+}

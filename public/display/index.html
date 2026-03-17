@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TV Party Game</title>
+  <link rel="stylesheet" href="display.css">
+</head>
+<body>
+  <!-- Top bar: current player -->
+  <div class="top-bar">
+    <div class="player-label">NOW PLAYING</div>
+    <div class="player-name" id="playerName">Waiting for host...</div>
+  </div>
+
+  <!-- Main content area -->
+  <div class="main-area">
+    <!-- Idle state -->
+    <div class="screen idle-screen active" id="idleScreen">
+      <div class="game-logo">🎮</div>
+      <h1 class="game-title">TV PARTY GAME</h1>
+      <p class="waiting-text">Waiting for host to start...</p>
+    </div>
+
+    <!-- Dice area -->
+    <div class="screen dice-screen" id="diceScreen">
+      <div class="dice-scene">
+        <div class="dice-cube" id="diceCube">
+          <div class="dice-face face-1"></div>
+          <div class="dice-face face-2"></div>
+          <div class="dice-face face-3"></div>
+          <div class="dice-face face-4"></div>
+          <div class="dice-face face-5"></div>
+          <div class="dice-face face-6"></div>
+        </div>
+      </div>
+      <div class="roll-label" id="rollLabel"></div>
+    </div>
+
+    <!-- Card area -->
+    <div class="screen card-screen" id="cardScreen">
+      <div class="card" id="gameCard">
+        <div class="card-header" id="cardHeader">
+          <span class="card-icon" id="cardIcon"></span>
+          <span class="card-category" id="cardCategory"></span>
+        </div>
+        <div class="card-body">
+          <p class="card-text" id="cardText"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Player change -->
+    <div class="screen player-screen" id="playerScreen">
+      <div class="player-change-label">NEXT UP</div>
+      <div class="player-change-name" id="playerChangeName"></div>
+    </div>
+  </div>
+
+  <!-- Bottom bar: category legend -->
+  <div class="bottom-bar" id="categoryLegend"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="display.js"></script>
+</body>
+</html>
