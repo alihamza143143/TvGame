@@ -2,80 +2,122 @@
   "categories": [
     {
       "id": 1,
-      "name": "Trivia",
+      "name": "Personal Call",
       "color": "#E74C3C",
-      "icon": "🧠",
+      "icon": "\ud83d\udcf1",
       "cards": [
-        { "text": "What year was the first Super Bowl played?" },
-        { "text": "Name 3 countries in South America in 10 seconds" },
-        { "text": "What planet is known as the Red Planet?" },
-        { "text": "How many bones are in the adult human body?" },
-        { "text": "What is the capital of Australia?" }
+        { "text": "CALL MOM\n\nSay:\n\"I just needed to get this off my chest.\n____ is not ____'s father.\nIt's ____.\"", "tone": "Soft and slow", "timer": 60 },
+        { "text": "CALL YOUR BEST FRIEND\n\nSay:\n\"I need more clothes.\nI sharted.\nI am in the _____ bathroom.\"", "tone": "Whisper", "timer": 60 },
+        { "text": "CALL YOUR EX\n\nSay:\n\"Did you call the police on me?\nBecause they are at my door.\"", "tone": "Loud", "timer": 60 },
+        { "text": "CALL THE LAST NUMBER YOU CALLED\n\nSay:\n\"Quick question.\nWhat are the last 4 digits of your Social Security number?\"", "timer": 60 },
+        { "text": "CALL THE LAST PERSON YOU TEXTED\n\nSay:\n\"I'm in the drive-thru at Wendy's.\nI don't have any money.\nCan you screenshot your debit card front and back?\"", "tone": "Stuttering", "timer": 60 },
+        { "text": "CALL MOM\n\nSay:\n\"Did the condom break?\"", "tone": "Soft", "timer": 60 },
+        { "text": "CALL WEST END SDA CHURCH\n404-755-5927\nOR ST MARY'S CATHOLIC CHURCH\n847-888-2828\n\nSay:\n\"As a new member, can I use Carlo Rossi wine when communion is given?\"", "timer": 60 },
+        { "text": "CALL THE 3RD TO THE LAST PERSON WHO CALLED YOU\n\nSay:\n\"I had a dream we got married.\nDo you want to get married?\"", "timer": 60 },
+        { "text": "CALL THE LAST PERSON YOU TEXTED\n\nSay:\n\"Can you Cash App me $50?\nI need to buy some herb.\"", "tone": "Crying", "timer": 60 },
+        { "text": "CALL THE FIRST PERSON YOU TEXTED YESTERDAY\n\nSay:\n\"Can you Instacart me some tampons?\"", "timer": 60 },
+        { "text": "\ud83c\udccf WILD\n\nCALL YOUR LAST CALLED NUMBER\n\nSay:\n\"I think I left my blue underwear in your glove box.\"\n\nOR DOUBLE SHOT", "timer": 60 },
+        { "text": "\u2764\ufe0f I LOVE YOU\n\nCALL WALMART CUSTOMER SERVICE\n1-800-925-6278\n\nSay only:\n\"I LOVE YOU\"", "timer": 60 }
       ]
     },
     {
       "id": 2,
-      "name": "Dare",
+      "name": "Business Call",
       "color": "#3498DB",
-      "icon": "🎯",
+      "icon": "\ud83d\udcde",
       "cards": [
-        { "text": "Do your best celebrity impression for 15 seconds" },
-        { "text": "Sing the chorus of any song right now" },
-        { "text": "Talk in an accent for the next 2 rounds" },
-        { "text": "Do 10 pushups right now" },
-        { "text": "Let the group pick a song — you have to dance to it for 20 seconds" }
+        { "text": "CALL SHARKS FISH AND CHICKEN\n901-360-0908 / 708-755-4500\n\nSay:\n\"I ordered 10 wings, but I only got 6.\nCan I come get the other 4?\"", "timer": 60 },
+        { "text": "CALL WESTERN CAB 702-736-8000\nOR DESERT CAB 702-386-9102\n\nSay:\n\"I think I left my wet spot on the seat.\nCan you ask the driver to bring it back?\nI'll pay extra.\"", "timer": 60 },
+        { "text": "CALL PUBLIC STORAGE\n1-800-567-0759\n\nSay:\n\"How much is your smallest unit?\nWhat time is check out?\"", "timer": 60 },
+        { "text": "CALL MOTEL 6\n1-800-466-8356\n\nSay:\n\"Can I reserve a room, and have the school bus drop my kids off at 3?\"", "timer": 60 },
+        { "text": "CALL SHELL GAS\n1-888-467-4355\n\nSay:\n\"If I already pumped gas and my card declined...\nIs that y'all loss?\"", "timer": 60 },
+        { "text": "CALL PLANET FITNESS\n1-844-880-7180\n\nSay:\n\"Quick question.\nCan I bring my bong in the showers?\nIt's really steamy in there.\"", "timer": 60 },
+        { "text": "CALL DOMINO'S PIZZA\n212-944-0400 / 404-872-3000\n\nSay:\n\"I am having a bachelorette party.\nCan y'all make a 12-inch penis in the shape of a pizza, with pepperoni for the nuts?\"", "timer": 60 },
+        { "text": "CALL POPEYES\n1-877-767-3937 / 713-655-0660\n\nSay:\n\"Can I bring a whole chicken cut up, and y'all fry it in your batter?\"", "timer": 60 },
+        { "text": "CALL HILTON HOTELS\n1-800-445-8667\n\nSay:\n\"Can I use someone else's credit card and it be our little secret?\"", "timer": 60 },
+        { "text": "CALL ANYTIME FITNESS 424-277-9000\nOR LM FITNESS CENTER 323-660-0050\n\nSay:\n\"Can I cancel my membership, but still keep using the showers?\"", "timer": 60 },
+        { "text": "\ud83c\udccf WILD\n\nTHE PERSON TO YOUR LEFT MUST TAKE A DOUBLE SHOT" },
+        { "text": "\u2764\ufe0f I LOVE YOU\n\nCALL SUBWAY GUEST CARE\n1-800-888-4848\n\nSay only:\n\"I LOVE YOU\"", "timer": 60 }
       ]
     },
     {
       "id": 3,
-      "name": "Social",
+      "name": "Text",
       "color": "#2ECC71",
-      "icon": "🍻",
+      "icon": "\ud83d\udcac",
       "cards": [
-        { "text": "Everyone who has traveled to another continent — drink!" },
-        { "text": "Point to the person most likely to survive a zombie apocalypse" },
-        { "text": "Everyone who has been skydiving — drink!" },
-        { "text": "The last person to raise their hand takes a drink" },
-        { "text": "Everyone born in the summer — drink!" }
+        { "text": "TEXT YOUR EX\n\n\"911 \ud83d\udea8 ICE looking for you.\nI didn't tell them nothing \ud83e\udd10\"" },
+        { "text": "TEXT THE 3RD PERSON YOU TEXTED YESTERDAY\n\n\"Don't play with me no more \ud83d\ude11\nNext time I won't be laughing.\nIf he calls you looking for me, you haven't seen me all year.\"" },
+        { "text": "TEXT THE LAST PERSON YOU TEXTED\n\n\"You need to stop lying so much.\nPeople are starting to notice \ud83d\udc40\"" },
+        { "text": "TEXT YOUR COUSIN\n\n\"I got 10 lbs of greens in the tub.\nThey about to be FYE tonight \ud83d\udd25\nCome thru and have some.\"" },
+        { "text": "TEXT THE GROUP CHAT\n\n\"FBI took my phone \ud83d\ude33\nDELETE ALL THE MESSAGES!!\"" },
+        { "text": "TEXT YOUR SIBLING\n\n\"I was the one who stole your pillowcase.\nDon't ask why.\nJust wash it \ud83d\ude2c\"" },
+        { "text": "TEXT THE SECOND FROM LAST PERSON YOU TEXTED\n\n\"I'm on a blind date and forgot to put on deodorant.\nI'm musty AF \ud83e\udd22\nI'm around the corner.\nCan you run me some deodorant?\"" },
+        { "text": "TEXT YOUR CRUSH OR YOUR EX\n\n\"Wow...\nSo we're just not talking about what happened in the bathroom? \ud83d\ude36\"" },
+        { "text": "TEXT THE FIRST PERSON YOU TEXTED ON SUNDAY\n\n\"If a guy named Dock calls, tell him we go together \ud83d\ude0f\"" },
+        { "text": "TEXT THE LAST PERSON WHO TEXTED YOU\n\n\"I forgot to tell you...\nEverything I told you was a lie.\nSorry \ud83d\ude2c\"" },
+        { "text": "\ud83c\udccf WILD\n\nPEOPLE BORN BETWEEN 1980 \u2013 1993\n\nDOUBLE SHOT" },
+        { "text": "\u2764\ufe0f I LOVE YOU\n\nCALL TARGET GUEST SERVICES\n1-800-440-0680\n\nSay only:\n\"I LOVE YOU\"", "timer": 60 }
       ]
     },
     {
       "id": 4,
-      "name": "Wildcard",
+      "name": "Post",
       "color": "#F39C12",
-      "icon": "🃏",
+      "icon": "\ud83d\udcf2",
       "cards": [
-        { "text": "Swap seats with someone at another table" },
-        { "text": "The host picks someone — they must tell an embarrassing story" },
-        { "text": "Rock Paper Scissors tournament — loser drinks" },
-        { "text": "Everyone puts their phone in the middle. First to grab theirs drinks" },
-        { "text": "Group photo time! Strike a pose!" }
+        { "text": "POST:\n\n\"I KISSED MY COUSIN ON THE LIPS \ud83d\ude33\"\n\nOR DRINK" },
+        { "text": "POST:\n\n\"REMEMBER, THAT'S OUR HUSBAND \ud83d\ude0f\"\n\nOR DRINK" },
+        { "text": "POST:\n\n\"IF YOU PULL ON IT, IT WILL BUSS \ud83d\ude2d\"\n\nOR DRINK" },
+        { "text": "POST:\n\n\"THAT WAS HARD TO LICK \ud83e\udd22\"\n\nOR DRINK" },
+        { "text": "POST:\n\n\"NEXT TIME, ASK YOUR HUSBAND \ud83d\ude44\"\n\nOR DRINK" },
+        { "text": "POST:\n\n\"HIS BREATH SMELLED LIKE VAGINA AND CRACKERS \ud83e\udd2e\"\n\nOR DRINK" },
+        { "text": "POST:\n\n\"6 INCHES IS OK FOR ME \ud83d\ude0c\"\n\nOR DRINK" },
+        { "text": "POST:\n\n\"MY BOOTY AIN'T REAL \ud83c\udf51\"\n\nOR DRINK" },
+        { "text": "POST:\n\n\"THE WEED MAN NEED A RIDE TO MY HOUSE \ud83d\ude97\ud83d\udca8\"\n\nOR DRINK" },
+        { "text": "POST:\n\n\"WHERE THERE IS SMOKE, I AM PRESENT \ud83d\ude36\u200d\ud83c\udf2b\ufe0f\"\n\nOR DRINK" },
+        { "text": "\ud83c\udccf WILD\n\nCALL CVS PHARMACY\n1-800-746-7287\n\nSay:\n\"I can't afford a box of tampons.\nCan you just take one out for me and pass it through the drive-thru window?\"\n\nOR DOUBLE SHOT", "timer": 60 },
+        { "text": "\u2764\ufe0f I LOVE YOU\n\nCALL STARBUCKS CUSTOMER CARE\n1-800-782-7282\n\nSay only:\n\"I LOVE YOU\"", "timer": 60 }
       ]
     },
     {
       "id": 5,
-      "name": "Versus",
+      "name": "Confess It",
       "color": "#9B59B6",
-      "icon": "⚔️",
+      "icon": "\ud83d\ude48",
       "cards": [
-        { "text": "Arm wrestling match — the two team captains face off!" },
-        { "text": "Staring contest — first to blink loses" },
-        { "text": "Who can hold their breath the longest?" },
-        { "text": "Thumb war! Best of 3 wins" },
-        { "text": "Each team picks a champion — trivia speed round!" }
+        { "text": "CALL DAD\n\nSay:\n\"I just got handicapped plates.\nI said that I'm in a wheelchair.\nI need you to get me a wheelchair tonight.\" \ud83d\ude2c", "timer": 60 },
+        { "text": "TEXT THE LAST PERSON YOU TEXTED\n\n\"I just ate Ms. Sue's Chinese Cuisine...\nNow I have the shitz \ud83d\udca9\"" },
+        { "text": "CALL YOUR COUSIN\n\nSay:\n\"I used your toothbrush last time I was there.\nMine fell on the floor and I panicked.\" \ud83d\ude33", "timer": 60 },
+        { "text": "CALL MOM OR YOUR AUNT OR YOUR SISTER\n\nSay:\n\"I took $30 from your purse.\nI wouldn't have taken it if I didn't need it.\" \ud83d\ude2c", "timer": 60 },
+        { "text": "TEXT THE LAST PERSON WHO TEXTED YOU\n\n\"I'm scared now...\nThe condom broke inside \ud83d\ude2d\"" },
+        { "text": "POST:\n\n\"There is nothing wrong with peeing in the shower or the tub.\nWTF \ud83d\ude10\"" },
+        { "text": "CALL THE LAST PERSON YOU CALLED\n\nSay:\n\"I got gas real bad.\nYou got any gas pills?\" \ud83d\udca8", "timer": 60 },
+        { "text": "CALL THE LAST PERSON WHO CALLED YOU\n\nSay:\n\"When the police asked questions...\nI gave them your name first.\" \ud83e\udd2b", "tone": "Whisper", "timer": 60 },
+        { "text": "CALL THE LAST PERSON YOU TEXTED\n\nSay:\n\"I ate your leftovers from the fridge.\nI just didn't think you would notice.\" \ud83d\ude2c", "timer": 60 },
+        { "text": "TEXT THE SECOND FROM LAST PERSON YOU TEXTED\n\n\"I told everybody that story about you.\nSorry \ud83d\ude2d\"" },
+        { "text": "\ud83c\udccf WILD\n\nLIVE TWERK\n\nTWERK FOR 60 SECONDS ON THE PERSON TO YOUR RIGHT'S LIVE\n\nOR DOUBLE SHOT", "timer": 60 },
+        { "text": "\u2764\ufe0f I LOVE YOU\n\nCALL AAA\n1-800-222-4357\n\nSay only:\n\"I LOVE YOU\"", "timer": 60 }
       ]
     },
     {
       "id": 6,
-      "name": "Hot Take",
+      "name": "Escalation",
       "color": "#E67E22",
-      "icon": "🔥",
+      "icon": "\u26a1",
       "cards": [
-        { "text": "Pineapple on pizza — yes or no? Majority rules, losers drink" },
-        { "text": "Is a hot dog a sandwich? Debate for 30 seconds" },
-        { "text": "What is the most overrated movie of all time?" },
-        { "text": "Would you rather fight 100 duck-sized horses or 1 horse-sized duck?" },
-        { "text": "What is the worst pizza topping? Group must agree" }
+        { "text": "TEXT YOUR EX\n\n\"Thanks for the Cash App!\nI needed that.\"" },
+        { "text": "CALL YOUR COUSIN\n\nSay:\n\"Do you have any used underwear I can borrow?\"", "tone": "Loud", "timer": 60 },
+        { "text": "CALL YOUR AUNT, UNCLE, OR BEST FRIEND\n\nSay:\n\"I just signed your name on a new car for me.\nIf they call, can you tell them it's OK?\"", "timer": 60 },
+        { "text": "CALL THE LAST PERSON YOU TEXTED\n\nSay:\n\"I am scared to be alone.\"", "tone": "Whisper", "timer": 60 },
+        { "text": "CALL CVS PHARMACY\n1-800-746-7287\n\nSay:\n\"I've been taking fish oil pills.\nNow people say they smell fish when I'm around.\nIs that normal?\"", "timer": 60 },
+        { "text": "CALL SPORT CLIPS\n1-800-872-4247\n\nSay:\n\"I need a pubic fade.\nIt's like a wolf down there.\nDo you cut pubes?\"", "timer": 60 },
+        { "text": "CALL THE LAST NUMBER YOU CALLED\n\nSay:\n\"Remember when you said, 'Clean it up'?\nWell, now we both need alibis.\"", "timer": 60 },
+        { "text": "POST:\n\n\"WOW.\nMy daddy is really my brother.\nWTF!\"" },
+        { "text": "CALL HOME DEPOT\n1-800-466-3337\n\nSay:\n\"Do y'all carry dirty hoes?\nI need a hoe that can handle herself.\"", "timer": 60 },
+        { "text": "TEXT THE LAST PERSON WHO TEXTED YOU\n\n\"Do not call or text me EVER!!!!\"" },
+        { "text": "\ud83c\udccf WILD\n\nCALL 24 HR FITNESS\n866-819-7414\n\nSay:\n\"I left my yellow dirty underwear on the shower head.\nCan one of y'all go bag it up and keep it at the front desk for pick up?\"\n\nOR DOUBLE SHOT", "timer": 60 },
+        { "text": "\u2764\ufe0f I LOVE YOU\n\nCALL FEDEX\n1-800-463-3339\n\nSay only:\n\"I LOVE YOU\"", "timer": 60 }
       ]
     }
   ]

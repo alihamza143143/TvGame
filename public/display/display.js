@@ -1,191 +1,254 @@
 const socket = io();
 
-// Categories data (matches cards.json)
-const categories = [
-  { id: 1, name: 'Trivia', color: '#E74C3C', icon: '🧠' },
-  { id: 2, name: 'Dare', color: '#3498DB', icon: '🎯' },
-  { id: 3, name: 'Social', color: '#2ECC71', icon: '🍻' },
-  { id: 4, name: 'Wildcard', color: '#F39C12', icon: '🃏' },
-  { id: 5, name: 'Versus', color: '#9B59B6', icon: '⚔️' },
-  { id: 6, name: 'Hot Take', color: '#E67E22', icon: '🔥' }
+// 6 categories (matches cards.json)
+let categories = [
+  { id: 1, name: 'Personal Call', color: '#E74C3C', icon: '\ud83d\udcf1' },
+  { id: 2, name: 'Business Call', color: '#3498DB', icon: '\ud83d\udcde' },
+  { id: 3, name: 'Text', color: '#2ECC71', icon: '\ud83d\udcac' },
+  { id: 4, name: 'Post', color: '#F39C12', icon: '\ud83d\udcf2' },
+  { id: 5, name: 'Confess It', color: '#9B59B6', icon: '\ud83d\ude48' },
+  { id: 6, name: 'Escalation', color: '#E67E22', icon: '\u26a1' }
 ];
+let currentPlayer = '';
+let totalTimerSeconds = 60;
 
-// DOM elements
-const playerName = document.getElementById('playerName');
-const idleScreen = document.getElementById('idleScreen');
-const diceScreen = document.getElementById('diceScreen');
-const cardScreen = document.getElementById('cardScreen');
-const playerScreen = document.getElementById('playerScreen');
-const diceCube = document.getElementById('diceCube');
-const rollLabel = document.getElementById('rollLabel');
-const gameCard = document.getElementById('gameCard');
-const cardHeader = document.getElementById('cardHeader');
-const cardIcon = document.getElementById('cardIcon');
-const cardCategory = document.getElementById('cardCategory');
-const cardText = document.getElementById('cardText');
-const playerChangeName = document.getElementById('playerChangeName');
-const categoryLegend = document.getElementById('categoryLegend');
-
-// Dice face rotation map
-const faceRotations = {
-  1: 'rotateX(0deg) rotateY(0deg)',
-  2: 'rotateX(0deg) rotateY(-90deg)',
-  3: 'rotateX(-90deg) rotateY(0deg)',
-  4: 'rotateX(90deg) rotateY(0deg)',
-  5: 'rotateX(0deg) rotateY(90deg)',
-  6: 'rotateX(0deg) rotateY(180deg)'
+// DOM
+const screens = {
+  setup: document.getElementById('setupScreen'),
+  playerTurn: document.getElementById('playerTurnScreen'),
+  dice: document.getElementById('diceScreen'),
+  category: document.getElementById('categoryScreen'),
+  card: document.getElementById('cardScreen'),
+  timer: document.getElementById('timerScreen'),
+  turnEnd: document.getElementById('turnEndScreen')
 };
 
-let currentRotation = { x: 0, y: 0 };
+const turnPlayerName = document.getElementById('turnPlayerName');
+const roundInfo = document.getElementById('roundInfo');
+const dicePlayerName = document.getElementById('dicePlayerName');
+const spinnerWheel = document.getElementById('spinnerWheel');
+const categoryPlayer = document.getElementById('categoryPlayer');
+const categoryIcon = document.getElementById('categoryIcon');
+const categoryName = document.getElementById('categoryName');
+const cardFullscreen = document.getElementById('cardFullscreen');
+const cardTopBar = document.getElementById('cardTopBar');
+const cardCatIcon = document.getElementById('cardCatIcon');
+const cardCatName = document.getElementById('cardCatName');
+const cardMainText = document.getElementById('cardMainText');
+const cardPlayerTag = document.getElementById('cardPlayerTag');
+const cardTone = document.getElementById('cardTone');
+const timerCardText = document.getElementById('timerCardText');
+const timerNumber = document.getElementById('timerNumber');
+const timerProgress = document.getElementById('timerProgress');
+const timerPlayer = document.getElementById('timerPlayer');
+const turnEndPlayer = document.getElementById('turnEndPlayer');
 
-// Build category legend
-function buildLegend() {
-  categoryLegend.innerHTML = '';
-  categories.forEach(cat => {
-    const item = document.createElement('div');
-    item.className = 'legend-item';
-    item.id = 'legend-' + cat.id;
-    item.innerHTML = `
-      <span class="legend-dot" style="background:${cat.color}"></span>
-      <span class="legend-icon">${cat.icon}</span>
-      <span>${cat.name}</span>
-    `;
-    categoryLegend.appendChild(item);
-  });
-}
+// Build spinner wheel segments
+function buildSpinner() {
+  if (!spinnerWheel || categories.length === 0) return;
+  spinnerWheel.innerHTML = '';
 
-// Build dice faces
-function buildDiceFaces() {
+  const count = categories.length;
+  const segmentAngle = 360 / count;
+
   categories.forEach((cat, i) => {
-    const face = document.querySelector('.face-' + (i + 1));
-    if (face) {
-      face.style.background = cat.color;
-      face.innerHTML = `<div><div style="font-size:1.5em">${cat.icon}</div><div style="font-size:0.5em;margin-top:6px">${cat.name}</div></div>`;
-    }
+    const segment = document.createElement('div');
+    segment.className = 'spinner-segment';
+    segment.style.transform = `rotate(${i * segmentAngle}deg)`;
+    segment.style.background = cat.color;
+    segment.innerHTML = `<span class="segment-label">${cat.icon}</span>`;
+
+    // Clip to segment size
+    const skew = 90 - segmentAngle;
+    segment.style.clipPath = `polygon(0 0, 100% 0, 100% 100%, 0 0)`;
+    segment.style.transformOrigin = '0% 100%';
+    segment.style.width = '50%';
+    segment.style.height = '50%';
+    segment.style.position = 'absolute';
+    segment.style.left = '50%';
+    segment.style.top = '0';
+    segment.style.transformOrigin = '0% 100%';
+
+    spinnerWheel.appendChild(segment);
   });
 }
 
 // Show screen
-function showScreen(screen) {
-  [idleScreen, diceScreen, cardScreen, playerScreen].forEach(s => s.classList.remove('active'));
-  screen.classList.add('active');
+function showScreen(name) {
+  Object.values(screens).forEach(s => s.classList.remove('active'));
+  if (screens[name]) screens[name].classList.add('active');
 }
 
-// Highlight legend category
-function highlightLegend(categoryId) {
-  document.querySelectorAll('.legend-item').forEach(item => item.classList.remove('active'));
-  if (categoryId) {
-    const el = document.getElementById('legend-' + categoryId);
-    if (el) el.classList.add('active');
-  }
+// Spinner animation
+let spinAngle = 0;
+function animateSpinner(targetCategory) {
+  showScreen('dice');
+  dicePlayerName.textContent = currentPlayer;
+
+  const count = categories.length;
+  const segmentAngle = 360 / count;
+  const catIndex = categories.findIndex(c => c.id === targetCategory.id);
+
+  // Calculate target angle - spin multiple times then land on category
+  const extraSpins = (Math.floor(Math.random() * 3) + 4) * 360;
+  const targetAngle = extraSpins + (catIndex * segmentAngle) + (segmentAngle / 2);
+
+  spinnerWheel.style.transition = 'none';
+  spinnerWheel.style.transform = `rotate(${spinAngle}deg)`;
+  spinnerWheel.offsetHeight;
+
+  spinnerWheel.style.transition = 'transform 3s cubic-bezier(0.17, 0.67, 0.12, 0.99)';
+  spinnerWheel.style.transform = `rotate(${targetAngle}deg)`;
+  spinAngle = targetAngle;
 }
 
-// Dice roll animation
-function animateDice(roll) {
-  showScreen(diceScreen);
-  rollLabel.classList.remove('visible');
-  gameCard.classList.remove('revealed');
-
-  const cat = categories.find(c => c.id === roll);
-
-  // Calculate spin: add multiple full rotations for drama
-  const spinsX = (Math.floor(Math.random() * 3) + 2) * 360;
-  const spinsY = (Math.floor(Math.random() * 3) + 2) * 360;
-
-  // Parse target rotation
-  const targetMatch = faceRotations[roll];
-  const xMatch = targetMatch.match(/rotateX\((-?\d+)deg\)/);
-  const yMatch = targetMatch.match(/rotateY\((-?\d+)deg\)/);
-  const targetX = xMatch ? parseInt(xMatch[1]) : 0;
-  const targetY = yMatch ? parseInt(yMatch[1]) : 0;
-
-  const finalX = spinsX + targetX;
-  const finalY = spinsY + targetY;
-
-  diceCube.style.transition = 'none';
-  diceCube.style.transform = `rotateX(${currentRotation.x}deg) rotateY(${currentRotation.y}deg)`;
-
-  // Force reflow
-  diceCube.offsetHeight;
-
-  diceCube.style.transition = 'transform 2s cubic-bezier(0.2, 0.8, 0.3, 1)';
-  diceCube.style.transform = `rotateX(${finalX}deg) rotateY(${finalY}deg)`;
-
-  currentRotation = { x: finalX, y: finalY };
-
-  // Show label after animation
-  setTimeout(() => {
-    if (cat) {
-      rollLabel.innerHTML = `<span style="color:${cat.color}">${cat.icon} ${cat.name}</span>`;
-      rollLabel.classList.add('visible');
-      highlightLegend(cat.id);
-    }
-  }, 2100);
+// Category reveal
+function showCategory(category) {
+  showScreen('category');
+  categoryPlayer.textContent = currentPlayer + "'s category";
+  categoryIcon.textContent = category.icon;
+  categoryName.textContent = category.name;
+  categoryName.style.color = category.color;
+  categoryIcon.style.textShadow = `0 0 60px ${category.color}`;
+  screens.category.style.background = `radial-gradient(circle at center, ${category.color}15 0%, #0a0a1a 70%)`;
 }
 
-// Card reveal animation
-function revealCard(card) {
-  showScreen(cardScreen);
-  gameCard.classList.remove('revealed');
+// Card reveal (full screen)
+function showCard(card) {
+  showScreen('card');
 
   const cat = card.category;
-  if (cat) {
-    cardHeader.style.background = cat.color;
-    cardIcon.textContent = cat.icon;
-    cardCategory.textContent = cat.name;
-    highlightLegend(cat.id);
+  cardFullscreen.style.background = `radial-gradient(circle at center, ${cat.color}20 0%, #0a0a1a 60%)`;
+  cardTopBar.style.color = cat.color;
+  cardCatIcon.textContent = cat.icon;
+  cardCatName.textContent = cat.name;
+  cardPlayerTag.textContent = currentPlayer;
+
+  // Format card text - preserve line breaks
+  cardMainText.innerHTML = card.text.replace(/\n/g, '<br>');
+
+  // Show tone if present
+  if (card.tone) {
+    cardTone.textContent = 'TONE: ' + card.tone.toUpperCase();
+    cardTone.style.display = 'block';
+    cardTone.style.color = cat.color;
+  } else {
+    cardTone.style.display = 'none';
   }
 
-  cardText.textContent = card.text;
-
-  // Trigger animation after brief delay
-  setTimeout(() => {
-    gameCard.classList.add('revealed');
-  }, 100);
+  // Re-trigger animation
+  cardFullscreen.style.animation = 'none';
+  cardFullscreen.offsetHeight;
+  cardFullscreen.style.animation = 'cardFlipIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)';
 }
 
-// Player change animation
-function showPlayerChange(name) {
-  playerChangeName.textContent = name;
-  showScreen(playerScreen);
-  highlightLegend(null);
+// Timer
+function startTimerDisplay(seconds) {
+  showScreen('timer');
+  totalTimerSeconds = seconds;
+  timerNumber.textContent = seconds;
+  timerPlayer.textContent = currentPlayer;
+  timerCardText.textContent = '';
+  timerNumber.style.color = '#fff';
 
-  // Return to idle after delay
-  setTimeout(() => {
-    showScreen(idleScreen);
-    playerName.textContent = name;
-  }, 2000);
+  const circumference = 2 * Math.PI * 90;
+  timerProgress.style.strokeDasharray = circumference;
+  timerProgress.style.strokeDashoffset = '0';
+  timerProgress.classList.remove('warning', 'danger');
+}
+
+function updateTimer(seconds) {
+  timerNumber.textContent = seconds;
+
+  const circumference = 2 * Math.PI * 90;
+  const progress = 1 - (seconds / totalTimerSeconds);
+  timerProgress.style.strokeDashoffset = circumference * progress;
+
+  timerProgress.classList.remove('warning', 'danger');
+  if (seconds <= 5) {
+    timerProgress.classList.add('danger');
+    timerNumber.style.color = '#E74C3C';
+  } else if (seconds <= 10) {
+    timerProgress.classList.add('warning');
+    timerNumber.style.color = '#F39C12';
+  } else {
+    timerNumber.style.color = '#fff';
+  }
+}
+
+function showTurnEnd(playerName) {
+  showScreen('turnEnd');
+  turnEndPlayer.textContent = playerName || currentPlayer;
 }
 
 // Socket events
 socket.on('state-sync', (state) => {
-  playerName.textContent = state.players[state.currentPlayerIndex] || 'Waiting...';
+  if (state.phase === 'setup') {
+    showScreen('setup');
+    return;
+  }
 
-  if (state.phase === 'drawn' && state.lastCard) {
-    revealCard(state.lastCard);
-  } else if (state.phase === 'rolled' && state.lastCategory) {
-    showScreen(diceScreen);
-    const cat = state.lastCategory;
-    rollLabel.innerHTML = `<span style="color:${cat.color}">${cat.icon} ${cat.name}</span>`;
-    rollLabel.classList.add('visible');
-    highlightLegend(cat.id);
-  } else {
-    showScreen(idleScreen);
+  currentPlayer = state.players[state.currentPlayerIndex] || '';
+
+  if (state.phase === 'player-turn') {
+    turnPlayerName.textContent = currentPlayer;
+    roundInfo.textContent = 'Round ' + (state.round || 1);
+    showScreen('playerTurn');
+  } else if (state.phase === 'category-reveal' && state.lastCategory) {
+    showCategory(state.lastCategory);
+  } else if (state.phase === 'card-reveal' && state.lastCard) {
+    showCard(state.lastCard);
+  } else if (state.phase === 'turn-end') {
+    showTurnEnd(currentPlayer);
   }
 });
 
+socket.on('game-started', (data) => {
+  const s = data.state;
+  currentPlayer = s.players[s.currentPlayerIndex];
+  turnPlayerName.textContent = currentPlayer;
+  roundInfo.textContent = 'Round 1';
+  showScreen('playerTurn');
+});
+
 socket.on('dice-result', (data) => {
-  animateDice(data.roll);
+  // Store category for spinner
+  if (data.category) {
+    animateSpinner(data.category);
+  }
+});
+
+socket.on('category-revealed', (data) => {
+  showCategory(data.category);
 });
 
 socket.on('card-drawn', (data) => {
-  revealCard(data.card);
+  showCard(data.card);
 });
+
+socket.on('timer-start', (data) => {
+  startTimerDisplay(data.seconds);
+});
+
+socket.on('timer-tick', (data) => {
+  updateTimer(data.seconds);
+});
+
+socket.on('timer-end', () => {
+  timerNumber.textContent = '0';
+  timerNumber.style.color = '#E74C3C';
+  setTimeout(() => showTurnEnd(currentPlayer), 1500);
+});
+
+socket.on('timer-stop', () => showTurnEnd(currentPlayer));
+socket.on('turn-completed', () => showTurnEnd(currentPlayer));
 
 socket.on('player-changed', (data) => {
-  showPlayerChange(data.player);
+  currentPlayer = data.player;
+  turnPlayerName.textContent = data.player;
+  roundInfo.textContent = 'Round ' + (data.round || 1);
+  showScreen('playerTurn');
 });
 
-// Initialize
-buildLegend();
-buildDiceFaces();
+// Init
+buildSpinner();

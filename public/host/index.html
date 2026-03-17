@@ -9,45 +9,84 @@
 <body>
   <div class="container">
     <header>
-      <h1>🎮 Host Controls</h1>
+      <h1>Host Controls</h1>
       <div class="connection-status" id="connectionStatus">Connecting...</div>
     </header>
 
-    <section class="players-section">
-      <h2>Players</h2>
-      <div id="playerList" class="player-list"></div>
-      <button id="addPlayerBtn" class="btn btn-small">+ Add Player</button>
-      <div class="current-player">
-        Now playing: <strong id="currentPlayerName">—</strong>
+    <!-- SETUP SCREEN -->
+    <div id="setupScreen" class="screen active">
+      <h2>Player Setup</h2>
+      <p class="hint">Enter 3-6 player names to start the game</p>
+      <div id="playerInputs" class="player-inputs"></div>
+      <div class="setup-buttons">
+        <button id="addPlayerBtn" class="btn btn-small">+ Add Player</button>
+        <button id="removePlayerBtn" class="btn btn-small btn-danger">- Remove</button>
       </div>
-    </section>
+      <button id="startGameBtn" class="btn btn-primary btn-large">Start Game</button>
+    </div>
 
-    <section class="controls-section">
-      <button id="rollDiceBtn" class="btn btn-primary btn-large">🎲 Roll Dice</button>
-      <button id="drawCardBtn" class="btn btn-secondary btn-large" disabled>🃏 Draw Card</button>
-      <button id="nextPlayerBtn" class="btn btn-accent btn-large">➡️ Next Player</button>
-      <button id="resetGameBtn" class="btn btn-danger btn-small">🔄 Reset Game</button>
-    </section>
+    <!-- GAME SCREEN -->
+    <div id="gameScreen" class="screen">
+      <!-- Current turn info -->
+      <div class="turn-info">
+        <div class="round-badge">Round <span id="roundNum">1</span></div>
+        <div class="current-turn">
+          <span class="turn-label">Current Player:</span>
+          <span class="turn-name" id="currentPlayerName">-</span>
+        </div>
+        <div class="player-dots" id="playerDots"></div>
+      </div>
 
-    <section class="status-section">
-      <div class="status-item">
-        <span class="label">Last Roll:</span>
-        <span id="lastRoll" class="value">—</span>
-      </div>
-      <div class="status-item">
-        <span class="label">Category:</span>
-        <span id="lastCategory" class="value">—</span>
-      </div>
-      <div class="status-item">
-        <span class="label">Last Card:</span>
-        <span id="lastCard" class="value">—</span>
-      </div>
-    </section>
+      <!-- Action buttons - change based on phase -->
+      <div class="actions">
+        <button id="rollDiceBtn" class="btn btn-primary btn-large">Roll Dice</button>
+        <button id="drawCardBtn" class="btn btn-secondary btn-large" style="display:none;">Reveal Card</button>
 
-    <section class="cards-section">
-      <h2>Cards Remaining</h2>
-      <div id="cardCounts" class="card-counts"></div>
-    </section>
+        <!-- Timer controls -->
+        <div id="timerControls" class="timer-controls" style="display:none;">
+          <div class="timer-display">
+            <span class="timer-label">Timer:</span>
+            <div class="timer-presets">
+              <button class="btn btn-small timer-btn" data-time="30">30s</button>
+              <button class="btn btn-small timer-btn active" data-time="60">60s</button>
+              <button class="btn btn-small timer-btn" data-time="90">90s</button>
+              <button class="btn btn-small timer-btn" data-time="120">2m</button>
+            </div>
+          </div>
+          <button id="startTimerBtn" class="btn btn-accent btn-large">Start Timer</button>
+          <button id="skipTimerBtn" class="btn btn-small">Skip Timer / Done</button>
+        </div>
+
+        <button id="nextPlayerBtn" class="btn btn-accent btn-large" style="display:none;">Next Player</button>
+      </div>
+
+      <!-- Status -->
+      <div class="status-section">
+        <div class="status-item">
+          <span class="label">Phase:</span>
+          <span id="phaseDisplay" class="value">-</span>
+        </div>
+        <div class="status-item">
+          <span class="label">Category:</span>
+          <span id="categoryDisplay" class="value">-</span>
+        </div>
+        <div class="status-item">
+          <span class="label">Card:</span>
+          <span id="cardDisplay" class="value">-</span>
+        </div>
+      </div>
+
+      <!-- Card counts -->
+      <div class="cards-section">
+        <h3>Cards Remaining</h3>
+        <div id="cardCounts" class="card-counts"></div>
+      </div>
+
+      <!-- Game controls -->
+      <div class="game-controls">
+        <button id="resetGameBtn" class="btn btn-danger btn-small">End Game</button>
+      </div>
+    </div>
 
     <div id="errorMsg" class="error-msg" style="display:none;"></div>
   </div>

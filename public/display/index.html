@@ -7,58 +7,81 @@
   <link rel="stylesheet" href="display.css">
 </head>
 <body>
-  <!-- Top bar: current player -->
-  <div class="top-bar">
-    <div class="player-label">NOW PLAYING</div>
-    <div class="player-name" id="playerName">Waiting for host...</div>
-  </div>
-
-  <!-- Main content area -->
-  <div class="main-area">
-    <!-- Idle state -->
-    <div class="screen idle-screen active" id="idleScreen">
-      <div class="game-logo">🎮</div>
-      <h1 class="game-title">TV PARTY GAME</h1>
-      <p class="waiting-text">Waiting for host to start...</p>
-    </div>
-
-    <!-- Dice area -->
-    <div class="screen dice-screen" id="diceScreen">
-      <div class="dice-scene">
-        <div class="dice-cube" id="diceCube">
-          <div class="dice-face face-1"></div>
-          <div class="dice-face face-2"></div>
-          <div class="dice-face face-3"></div>
-          <div class="dice-face face-4"></div>
-          <div class="dice-face face-5"></div>
-          <div class="dice-face face-6"></div>
-        </div>
-      </div>
-      <div class="roll-label" id="rollLabel"></div>
-    </div>
-
-    <!-- Card area -->
-    <div class="screen card-screen" id="cardScreen">
-      <div class="card" id="gameCard">
-        <div class="card-header" id="cardHeader">
-          <span class="card-icon" id="cardIcon"></span>
-          <span class="card-category" id="cardCategory"></span>
-        </div>
-        <div class="card-body">
-          <p class="card-text" id="cardText"></p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Player change -->
-    <div class="screen player-screen" id="playerScreen">
-      <div class="player-change-label">NEXT UP</div>
-      <div class="player-change-name" id="playerChangeName"></div>
+  <!-- SETUP / WAITING SCREEN -->
+  <div class="screen active" id="setupScreen">
+    <div class="setup-content">
+      <div class="game-logo-big">TV PARTY GAME</div>
+      <p class="setup-hint">Waiting for host to start the game...</p>
     </div>
   </div>
 
-  <!-- Bottom bar: category legend -->
-  <div class="bottom-bar" id="categoryLegend"></div>
+  <!-- PLAYER TURN SCREEN -->
+  <div class="screen" id="playerTurnScreen">
+    <div class="turn-content">
+      <div class="turn-badge">IT'S YOUR TURN</div>
+      <div class="turn-player-name" id="turnPlayerName"></div>
+      <div class="turn-instruction">Get ready!</div>
+      <div class="round-info" id="roundInfo">Round 1</div>
+    </div>
+  </div>
+
+  <!-- DICE / SPINNER SCREEN -->
+  <div class="screen" id="diceScreen">
+    <div class="dice-content">
+      <div class="dice-player-name" id="dicePlayerName"></div>
+      <div class="spinner-container">
+        <div class="spinner-pointer"></div>
+        <div class="spinner-wheel" id="spinnerWheel"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CATEGORY REVEAL SCREEN -->
+  <div class="screen" id="categoryScreen">
+    <div class="category-content">
+      <div class="category-player" id="categoryPlayer"></div>
+      <div class="category-icon" id="categoryIcon"></div>
+      <div class="category-name" id="categoryName"></div>
+      <div class="category-suspense">What will the card say?</div>
+    </div>
+  </div>
+
+  <!-- CARD REVEAL SCREEN (FULL SCREEN) -->
+  <div class="screen" id="cardScreen">
+    <div class="card-fullscreen" id="cardFullscreen">
+      <div class="card-top-bar" id="cardTopBar">
+        <span class="card-cat-icon" id="cardCatIcon"></span>
+        <span class="card-cat-name" id="cardCatName"></span>
+      </div>
+      <div class="card-main-text" id="cardMainText"></div>
+      <div class="card-tone" id="cardTone" style="display:none;"></div>
+      <div class="card-player-tag" id="cardPlayerTag"></div>
+    </div>
+  </div>
+
+  <!-- TIMER SCREEN -->
+  <div class="screen" id="timerScreen">
+    <div class="timer-content">
+      <div class="timer-card-text" id="timerCardText"></div>
+      <div class="timer-circle">
+        <svg class="timer-svg" viewBox="0 0 200 200">
+          <circle class="timer-bg" cx="100" cy="100" r="90" />
+          <circle class="timer-progress" id="timerProgress" cx="100" cy="100" r="90" />
+        </svg>
+        <div class="timer-number" id="timerNumber">60</div>
+      </div>
+      <div class="timer-player" id="timerPlayer"></div>
+    </div>
+  </div>
+
+  <!-- TURN COMPLETE SCREEN -->
+  <div class="screen" id="turnEndScreen">
+    <div class="turn-end-content">
+      <div class="turn-end-emoji">&#10004;</div>
+      <div class="turn-end-text">Turn Complete!</div>
+      <div class="turn-end-player" id="turnEndPlayer"></div>
+    </div>
+  </div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="display.js"></script>
