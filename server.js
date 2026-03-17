@@ -10,6 +10,11 @@ const io = new Server(server);
 
 const PORT = process.env.PORT || 3000;
 
+// When running as pkg exe, __dirname is inside snapshot.
+// cards.json should be next to the exe so user can edit it.
+const isPkg = typeof process.pkg !== 'undefined';
+const baseDir = isPkg ? path.dirname(process.execPath) : __dirname;
+
 // Game state
 const state = {
   phase: 'setup',  // setup | player-turn | rolling | category-reveal | card-reveal | timer-running | turn-end
@@ -24,9 +29,47 @@ const state = {
   round: 1
 };
 
-// Serve static files
-app.use('/host', express.static(path.join(__dirname, 'public', 'host')));
-app.use('/display', express.static(path.join(__dirname, 'public', 'display')));
+// Pre-load all static files into memory at startup (works in both pkg and dev)
+const staticFiles = {};
+const mimeTypes = { '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript' };
+
+// These path.join(__dirname, ...) calls let pkg detect and bundle the files
+const fileMappings = [
+  ['/host', path.join(__dirname, 'public', 'host', 'index.html')],
+  ['/host/', path.join(__dirname, 'public', 'host', 'index.html')],
+  ['/host/index.html', path.join(__dirname, 'public', 'host', 'index.html')],
+  ['/host/host.css', path.join(__dirname, 'public', 'host', 'host.css')],
+  ['/host/host.js', path.join(__dirname, 'public', 'host', 'host.js')],
+  ['/display', path.join(__dirname, 'public', 'display', 'index.html')],
+  ['/display/', path.join(__dirname, 'public', 'display', 'index.html')],
+  ['/display/index.html', path.join(__dirname, 'public', 'display', 'index.html')],
+  ['/display/display.css', path.join(__dirname, 'public', 'display', 'display.css')],
+  ['/display/display.js', path.join(__dirname, 'public', 'display', 'display.js')]
+];
+
+// Load all files into memory
+fileMappings.forEach(([route, filePath]) => {
+  try {
+    staticFiles[route] = {
+      content: fs.readFileSync(filePath, 'utf8'),
+      mime: mimeTypes[path.extname(filePath)] || 'text/plain'
+    };
+  } catch (e) {
+    console.log('  Warning: Could not load', filePath);
+  }
+});
+
+// Serve pre-loaded files
+fileMappings.forEach(([route]) => {
+  app.get(route, (req, res) => {
+    const file = staticFiles[route];
+    if (file) {
+      res.type(file.mime).send(file.content);
+    } else {
+      res.status(404).send('File not found');
+    }
+  });
+});
 
 // Routes
 app.get('/', (req, res) => res.redirect('/display'));
@@ -34,7 +77,7 @@ app.get('/', (req, res) => res.redirect('/display'));
 // API to get cards
 app.get('/api/cards', (req, res) => {
   try {
-    const data = JSON.parse(fs.readFileSync(path.join(__dirname, 'cards.json'), 'utf8'));
+    const data = JSON.parse(fs.readFileSync(path.join(baseDir, 'cards.json'), 'utf8'));
     const summary = data.categories.map(cat => ({
       id: cat.id,
       name: cat.name,
@@ -51,7 +94,7 @@ app.get('/api/cards', (req, res) => {
 });
 
 function loadCards() {
-  return JSON.parse(fs.readFileSync(path.join(__dirname, 'cards.json'), 'utf8'));
+  return JSON.parse(fs.readFileSync(path.join(baseDir, 'cards.json'), 'utf8'));
 }
 
 function getFullState() {
@@ -125,11 +168,11 @@ io.on('connection', (socket) => {
 
       io.emit('dice-result', { roll, category: state.lastCategory, state: getFullState() });
 
-      // After dice animation, move to category reveal
+      // After dice animation completes (~7s), move to category reveal
       setTimeout(() => {
         state.phase = 'category-reveal';
         io.emit('category-revealed', { category: state.lastCategory, state: getFullState() });
-      }, 2500);
+      }, 7500);
     } catch (err) {
       socket.emit('error-msg', { message: 'Failed to read cards.json: ' + err.message });
     }
@@ -239,8 +282,19 @@ io.on('connection', (socket) => {
   });
 });
 
+// If running as exe, copy cards.json next to exe if not present
+if (isPkg) {
+  const externalCards = path.join(baseDir, 'cards.json');
+  if (!fs.existsSync(externalCards)) {
+    const bundledCards = path.join(snapshotDir, 'cards.json');
+    fs.copyFileSync(bundledCards, externalCards);
+    console.log('Created cards.json next to exe — edit this file to add/change cards.');
+  }
+}
+
 server.listen(PORT, () => {
   console.log(`\n  TV Party Game is running!\n`);
   console.log(`  Host dashboard:  http://localhost:${PORT}/host`);
   console.log(`  TV display:      http://localhost:${PORT}/display\n`);
+
 });

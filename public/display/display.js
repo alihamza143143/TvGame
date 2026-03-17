@@ -1,7 +1,7 @@
 const socket = io();
 
 // 6 categories (matches cards.json)
-let categories = [
+const categories = [
   { id: 1, name: 'Personal Call', color: '#E74C3C', icon: '\ud83d\udcf1' },
   { id: 2, name: 'Business Call', color: '#3498DB', icon: '\ud83d\udcde' },
   { id: 3, name: 'Text', color: '#2ECC71', icon: '\ud83d\udcac' },
@@ -23,10 +23,11 @@ const screens = {
   turnEnd: document.getElementById('turnEndScreen')
 };
 
+const diceCube = document.getElementById('diceCube');
+const diceResultLabel = document.getElementById('diceResultLabel');
 const turnPlayerName = document.getElementById('turnPlayerName');
 const roundInfo = document.getElementById('roundInfo');
 const dicePlayerName = document.getElementById('dicePlayerName');
-const spinnerWheel = document.getElementById('spinnerWheel');
 const categoryPlayer = document.getElementById('categoryPlayer');
 const categoryIcon = document.getElementById('categoryIcon');
 const categoryName = document.getElementById('categoryName');
@@ -43,33 +44,26 @@ const timerProgress = document.getElementById('timerProgress');
 const timerPlayer = document.getElementById('timerPlayer');
 const turnEndPlayer = document.getElementById('turnEndPlayer');
 
-// Build spinner wheel segments
-function buildSpinner() {
-  if (!spinnerWheel || categories.length === 0) return;
-  spinnerWheel.innerHTML = '';
+// Dice face target rotations
+const faceRotations = {
+  1: { x: 0, y: 0 },
+  2: { x: 0, y: -90 },
+  3: { x: -90, y: 0 },
+  4: { x: 90, y: 0 },
+  5: { x: 0, y: 90 },
+  6: { x: 0, y: 180 }
+};
 
-  const count = categories.length;
-  const segmentAngle = 360 / count;
+let currentDiceRotation = { x: -20, y: 20 };
 
+// Build dice faces with category icons and colors
+function buildDiceFaces() {
   categories.forEach((cat, i) => {
-    const segment = document.createElement('div');
-    segment.className = 'spinner-segment';
-    segment.style.transform = `rotate(${i * segmentAngle}deg)`;
-    segment.style.background = cat.color;
-    segment.innerHTML = `<span class="segment-label">${cat.icon}</span>`;
-
-    // Clip to segment size
-    const skew = 90 - segmentAngle;
-    segment.style.clipPath = `polygon(0 0, 100% 0, 100% 100%, 0 0)`;
-    segment.style.transformOrigin = '0% 100%';
-    segment.style.width = '50%';
-    segment.style.height = '50%';
-    segment.style.position = 'absolute';
-    segment.style.left = '50%';
-    segment.style.top = '0';
-    segment.style.transformOrigin = '0% 100%';
-
-    spinnerWheel.appendChild(segment);
+    const face = document.querySelector('.face-' + (i + 1));
+    if (face) {
+      face.style.background = `linear-gradient(135deg, ${cat.color}, ${cat.color}CC)`;
+      face.innerHTML = `<span class="face-icon">${cat.icon}</span><span class="face-name">${cat.name}</span>`;
+    }
   });
 }
 
@@ -79,27 +73,80 @@ function showScreen(name) {
   if (screens[name]) screens[name].classList.add('active');
 }
 
-// Spinner animation
-let spinAngle = 0;
-function animateSpinner(targetCategory) {
+// 3D dice roll animation - 3 phases for maximum suspense
+function animateDice(roll) {
   showScreen('dice');
   dicePlayerName.textContent = currentPlayer;
+  diceResultLabel.classList.remove('visible');
 
-  const count = categories.length;
-  const segmentAngle = 360 / count;
-  const catIndex = categories.findIndex(c => c.id === targetCategory.id);
+  const scene = document.querySelector('.dice-scene');
+  scene.classList.add('rolling-glow');
+  scene.classList.remove('bounce');
 
-  // Calculate target angle - spin multiple times then land on category
-  const extraSpins = (Math.floor(Math.random() * 3) + 4) * 360;
-  const targetAngle = extraSpins + (catIndex * segmentAngle) + (segmentAngle / 2);
+  const cat = categories.find(c => c.id === roll);
+  const target = faceRotations[roll];
 
-  spinnerWheel.style.transition = 'none';
-  spinnerWheel.style.transform = `rotate(${spinAngle}deg)`;
-  spinnerWheel.offsetHeight;
+  // Phase 1: Wild fast chaotic tumble
+  const dir1 = Math.random() > 0.5 ? 1 : -1;
+  const dir2 = Math.random() > 0.5 ? 1 : -1;
+  const tumbleX = dir1 * (Math.floor(Math.random() * 3) + 3) * 360;
+  const tumbleY = dir2 * (Math.floor(Math.random() * 3) + 3) * 360;
+  const tumbleZ = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 2) + 2) * 360;
 
-  spinnerWheel.style.transition = 'transform 3s cubic-bezier(0.17, 0.67, 0.12, 0.99)';
-  spinnerWheel.style.transform = `rotate(${targetAngle}deg)`;
-  spinAngle = targetAngle;
+  // Phase 2: Medium speed random direction
+  const midX = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 2) + 2) * 360;
+  const midY = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 2) + 2) * 360;
+  const midZ = (Math.random() > 0.5 ? 1 : -1) * 360;
+
+  // Phase 3: Settle onto target face
+  const settleSpinsX = (Math.floor(Math.random() * 2) + 2) * 360;
+  const settleSpinsY = (Math.floor(Math.random() * 2) + 2) * 360;
+  const finalX = settleSpinsX + target.x;
+  const finalY = settleSpinsY + target.y;
+
+  // Running totals for smooth transitions
+  let runX = currentDiceRotation.x;
+  let runY = currentDiceRotation.y;
+
+  // Start: snap to current position
+  diceCube.style.transition = 'none';
+  diceCube.style.transform = `rotateX(${runX}deg) rotateY(${runY}deg) rotateZ(0deg)`;
+  diceCube.offsetHeight;
+
+  // Phase 1: Fast chaotic tumble (0 - 2s)
+  diceCube.style.transition = 'transform 2s cubic-bezier(0.4, 0, 0.8, 0.4)';
+  runX += tumbleX;
+  runY += tumbleY;
+  diceCube.style.transform = `rotateX(${runX}deg) rotateY(${runY}deg) rotateZ(${tumbleZ}deg)`;
+
+  // Phase 2: Medium tumble, changing direction (2s - 4s)
+  setTimeout(() => {
+    diceCube.style.transition = 'transform 2s cubic-bezier(0.3, 0, 0.6, 0.5)';
+    runX += midX;
+    runY += midY;
+    diceCube.style.transform = `rotateX(${runX}deg) rotateY(${runY}deg) rotateZ(${tumbleZ + midZ}deg)`;
+  }, 1800);
+
+  // Phase 3: Slow settle onto final face (4s - 7s)
+  setTimeout(() => {
+    diceCube.style.transition = 'transform 3s cubic-bezier(0.05, 0.7, 0.1, 1)';
+    diceCube.style.transform = `rotateX(${finalX}deg) rotateY(${finalY}deg) rotateZ(0deg)`;
+    currentDiceRotation = { x: finalX, y: finalY };
+  }, 3600);
+
+  // Bounce effect when landing (at ~6.5s)
+  setTimeout(() => {
+    scene.classList.remove('rolling-glow');
+    scene.classList.add('bounce');
+  }, 6200);
+
+  // Show result label after everything settles (at ~7s)
+  setTimeout(() => {
+    if (cat) {
+      diceResultLabel.innerHTML = `<span style="color:${cat.color}">${cat.icon} ${cat.name}</span>`;
+      diceResultLabel.classList.add('visible');
+    }
+  }, 6800);
 }
 
 // Category reveal
@@ -212,9 +259,8 @@ socket.on('game-started', (data) => {
 });
 
 socket.on('dice-result', (data) => {
-  // Store category for spinner
-  if (data.category) {
-    animateSpinner(data.category);
+  if (data.roll) {
+    animateDice(data.roll);
   }
 });
 
@@ -251,4 +297,4 @@ socket.on('player-changed', (data) => {
 });
 
 // Init
-buildSpinner();
+buildDiceFaces();

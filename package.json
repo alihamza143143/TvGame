@@ -3,11 +3,24 @@
   "version": "1.0.0",
   "description": "Live hosted party game for bars and restaurants",
   "main": "server.js",
+  "bin": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "build": "pkg . --targets node18-win-x64 --output dist/TvPartyGame.exe"
+  },
+  "pkg": {
+    "scripts": "server.js",
+    "assets": [
+      "public/**/*.*",
+      "cards.json"
+    ],
+    "outputPath": "dist"
   },
   "dependencies": {
     "express": "^4.18.2",
     "socket.io": "^4.7.4"
+  },
+  "devDependencies": {
+    "pkg": "^5.8.1"
   }
 }
