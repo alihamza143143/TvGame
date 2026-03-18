@@ -1,6 +1,6 @@
 const socket = io();
 
-// 6 categories (matches cards.json)
+// 6 categories for dice face visuals only
 const categories = [
   { id: 1, name: 'Personal Call', color: '#E74C3C', icon: '\ud83d\udcf1' },
   { id: 2, name: 'Business Call', color: '#3498DB', icon: '\ud83d\udcde' },
@@ -17,7 +17,6 @@ const screens = {
   setup: document.getElementById('setupScreen'),
   playerTurn: document.getElementById('playerTurnScreen'),
   dice: document.getElementById('diceScreen'),
-  categoryReveal: document.getElementById('categoryRevealScreen'),
   waitDraw: document.getElementById('waitDrawScreen'),
   card: document.getElementById('cardScreen'),
   timer: document.getElementById('timerScreen'),
@@ -29,13 +28,7 @@ const turnPlayerName = document.getElementById('turnPlayerName');
 const roundInfo = document.getElementById('roundInfo');
 const dicePlayerName = document.getElementById('dicePlayerName');
 
-// Category reveal elements
-const catRevealIcon = document.getElementById('catRevealIcon');
-const catRevealName = document.getElementById('catRevealName');
-const catRevealPlayer = document.getElementById('catRevealPlayer');
-
-// Wait draw elements
-const waitDrawCategory = document.getElementById('waitDrawCategory');
+// Wait draw elements (face-down card — NO category shown)
 const waitDrawPlayer = document.getElementById('waitDrawPlayer');
 
 // Card elements
@@ -66,7 +59,7 @@ const faceRotations = {
 
 let currentDiceRotation = { x: -20, y: 20 };
 
-// Build dice faces with category icons and colors
+// Build dice faces with category icons and colors (visual only)
 function buildDiceFaces() {
   categories.forEach((cat, i) => {
     const face = document.querySelector('.face-' + (i + 1));
@@ -83,7 +76,7 @@ function showScreen(name) {
   if (screens[name]) screens[name].classList.add('active');
 }
 
-// 3D dice roll animation - 3 phases for maximum suspense
+// 3D dice roll animation — purely visual, does NOT determine the card
 function animateDice(roll) {
   showScreen('dice');
   dicePlayerName.textContent = currentPlayer;
@@ -101,33 +94,31 @@ function animateDice(roll) {
   const tumbleY = dir2 * (Math.floor(Math.random() * 3) + 4) * 360;
   const tumbleZ = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 2) + 2) * 360;
 
-  // Phase 2: Medium speed random direction
+  // Phase 2: Medium speed
   const midX = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 2) + 3) * 360;
   const midY = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 2) + 3) * 360;
   const midZ = (Math.random() > 0.5 ? 1 : -1) * 360;
 
-  // Phase 3: Settle onto target face
+  // Phase 3: Settle
   const settleSpinsX = (Math.floor(Math.random() * 2) + 2) * 360;
   const settleSpinsY = (Math.floor(Math.random() * 2) + 2) * 360;
   const finalX = settleSpinsX + target.x;
   const finalY = settleSpinsY + target.y;
 
-  // Running totals for smooth transitions
   let runX = currentDiceRotation.x;
   let runY = currentDiceRotation.y;
 
-  // Start: snap to current position
   diceCube.style.transition = 'none';
   diceCube.style.transform = `rotateX(${runX}deg) rotateY(${runY}deg) rotateZ(0deg)`;
   diceCube.offsetHeight;
 
-  // Phase 1: Fast chaotic tumble (0 - 2.5s)
+  // Phase 1: Fast tumble (0 - 2.5s)
   diceCube.style.transition = 'transform 2.5s cubic-bezier(0.4, 0, 0.8, 0.4)';
   runX += tumbleX;
   runY += tumbleY;
   diceCube.style.transform = `rotateX(${runX}deg) rotateY(${runY}deg) rotateZ(${tumbleZ}deg)`;
 
-  // Phase 2: Medium tumble, changing direction (2.5s - 5s)
+  // Phase 2: Medium tumble (2.5s - 5s)
   setTimeout(() => {
     diceCube.style.transition = 'transform 2.5s cubic-bezier(0.3, 0, 0.6, 0.5)';
     runX += midX;
@@ -135,53 +126,27 @@ function animateDice(roll) {
     diceCube.style.transform = `rotateX(${runX}deg) rotateY(${runY}deg) rotateZ(${tumbleZ + midZ}deg)`;
   }, 2200);
 
-  // Phase 3: Slow settle onto final face (5s - 7.5s)
+  // Phase 3: Slow settle (5s - 7.5s)
   setTimeout(() => {
     diceCube.style.transition = 'transform 3s cubic-bezier(0.05, 0.7, 0.1, 1)';
     diceCube.style.transform = `rotateX(${finalX}deg) rotateY(${finalY}deg) rotateZ(0deg)`;
     currentDiceRotation = { x: finalX, y: finalY };
   }, 4500);
 
-  // Bounce effect when landing
+  // Bounce on landing
   setTimeout(() => {
     scene.classList.remove('rolling-glow');
     scene.classList.add('bounce');
   }, 7000);
 }
 
-// Category reveal screen — shows category after dice settles
-function showCategoryReveal(category) {
-  showScreen('categoryReveal');
-
-  const revealContent = document.querySelector('.category-reveal-content');
-  revealContent.style.borderColor = category.color;
-
-  catRevealIcon.textContent = category.icon;
-  catRevealIcon.style.color = category.color;
-  catRevealName.textContent = category.name;
-  catRevealName.style.color = category.color;
-  catRevealPlayer.textContent = currentPlayer;
-
-  // Re-trigger animation
-  revealContent.style.animation = 'none';
-  revealContent.offsetHeight;
-  revealContent.style.animation = 'categoryBurst 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)';
-}
-
-// Waiting for host to press "Reveal Card" — shows category
-function showWaitDraw(category) {
+// Show face-down card — NO category, NO hints, just a card back
+function showWaitDraw() {
   showScreen('waitDraw');
-  if (category) {
-    waitDrawCategory.textContent = category.icon + ' ' + category.name;
-    waitDrawCategory.style.color = category.color;
-  }
   waitDrawPlayer.textContent = currentPlayer;
 }
 
-// Card reveal (full screen)
-// Standard cards: show category
-// Wild cards: show "WILD" only, no category
-// I Love You cards: show "I LOVE YOU" only
+// Card reveal — THIS is the ONLY moment category + content appear
 function showCard(card) {
   showScreen('card');
 
@@ -208,7 +173,7 @@ function showCard(card) {
 
   cardPlayerTag.textContent = currentPlayer;
 
-  // Format card text - strip prefix for Wild/ILY since shown in top bar
+  // Format card text — strip prefix for Wild/ILY since shown in top bar
   let displayText = card.text;
   if (isWild) {
     displayText = displayText.replace(/^\ud83c\udccf\s*WILD\s*\n*/, '');
@@ -226,7 +191,7 @@ function showCard(card) {
     cardTone.style.display = 'none';
   }
 
-  // Re-trigger flip animation
+  // Card flip animation
   cardFullscreen.style.animation = 'none';
   cardFullscreen.offsetHeight;
   cardFullscreen.style.animation = 'cardFlipIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)';
@@ -284,10 +249,8 @@ socket.on('state-sync', (state) => {
     turnPlayerName.textContent = currentPlayer;
     roundInfo.textContent = 'Round ' + (state.round || 1);
     showScreen('playerTurn');
-  } else if (state.phase === 'category-reveal' && state.lastCategory) {
-    showCategoryReveal(state.lastCategory);
   } else if (state.phase === 'waiting-draw') {
-    showWaitDraw(state.lastCategory);
+    showWaitDraw();
   } else if (state.phase === 'card-reveal' && state.lastCard) {
     showCard(state.lastCard);
   } else if (state.phase === 'turn-end') {
@@ -309,18 +272,12 @@ socket.on('dice-result', (data) => {
   }
 });
 
-// Category revealed after dice settles
-socket.on('category-reveal', (data) => {
-  if (data.category) {
-    showCategoryReveal(data.category);
-  }
+// Dice settled — show face-down card, NO category
+socket.on('dice-settled', () => {
+  showWaitDraw();
 });
 
-// Dice has settled — show waiting screen with category
-socket.on('dice-settled', (data) => {
-  showWaitDraw(data.category);
-});
-
+// Card revealed — NOW show category + content
 socket.on('card-drawn', (data) => {
   showCard(data.card);
 });

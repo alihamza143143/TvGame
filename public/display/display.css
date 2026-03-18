@@ -229,82 +229,53 @@ body {
   animation: diceBounce 0.6s ease-out;
 }
 
-/* ============ CATEGORY REVEAL SCREEN ============ */
-.category-reveal-content {
-  text-align: center;
-  animation: categoryBurst 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-@keyframes categoryBurst {
-  0% {
-    transform: scale(0);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.category-reveal-label {
-  font-size: clamp(1.2rem, 2.5vw, 2rem);
-  letter-spacing: 8px;
-  color: #666;
-  text-transform: uppercase;
-  margin-bottom: 4vh;
-}
-
-.category-reveal-icon {
-  font-size: clamp(6rem, 15vw, 12rem);
-  margin-bottom: 2vh;
-  filter: drop-shadow(0 0 30px currentColor);
-}
-
-.category-reveal-name {
-  font-size: clamp(3rem, 8vw, 7rem);
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 6px;
-  text-shadow: 0 0 40px currentColor;
-}
-
-.category-reveal-player {
-  font-size: clamp(1rem, 2vw, 1.5rem);
-  color: #F39C12;
-  margin-top: 4vh;
-  font-weight: 600;
-}
-
-/* ============ WAIT DRAW SCREEN ============ */
+/* ============ WAIT DRAW SCREEN (FACE DOWN CARD) ============ */
 .wait-draw-content {
   text-align: center;
 }
 
-.wait-draw-category {
-  font-size: clamp(1.8rem, 3.5vw, 3rem);
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 4px;
-  margin-bottom: 4vh;
-}
-
-.wait-draw-player {
-  font-size: clamp(1rem, 2vw, 1.5rem);
-  color: #F39C12;
-  font-weight: 700;
-  margin-top: 2vh;
-}
-
-.wait-draw-icon {
-  font-size: clamp(5rem, 12vw, 10rem);
+.wait-draw-card-back {
+  width: clamp(180px, 22vw, 280px);
+  height: clamp(250px, 32vw, 400px);
+  background: linear-gradient(135deg, #1a1a3e, #2a2a5e);
+  border-radius: 20px;
+  border: 3px solid rgba(255,255,255,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 30px rgba(243,156,18,0.1);
   animation: cardSuspense 2s ease-in-out infinite;
+  position: relative;
+  overflow: hidden;
+}
+
+.wait-draw-card-back::before {
+  content: '';
+  position: absolute;
+  inset: 12px;
+  border: 2px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+}
+
+.card-back-inner {
+  font-size: clamp(5rem, 12vw, 10rem);
+  font-weight: 900;
+  color: rgba(255,255,255,0.15);
 }
 
 @keyframes cardSuspense {
   0%, 100% { transform: scale(1) rotateY(0deg); }
-  25% { transform: scale(1.05) rotateY(5deg); }
-  50% { transform: scale(1.1) rotateY(0deg); }
-  75% { transform: scale(1.05) rotateY(-5deg); }
+  25% { transform: scale(1.03) rotateY(3deg); }
+  50% { transform: scale(1.05) rotateY(0deg); }
+  75% { transform: scale(1.03) rotateY(-3deg); }
+}
+
+.wait-draw-player {
+  font-size: clamp(1.2rem, 2.5vw, 2rem);
+  color: #F39C12;
+  font-weight: 700;
+  margin-top: 3vh;
 }
 
 .wait-draw-text {

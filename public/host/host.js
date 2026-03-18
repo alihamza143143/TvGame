@@ -135,11 +135,6 @@ function updateButtons(phase) {
       rollDiceBtn.style.display = 'block';
       rollDiceBtn.disabled = true;
       break;
-    case 'category-reveal':
-      // Category is showing on TV, waiting for transition to draw
-      drawCardBtn.style.display = 'block';
-      drawCardBtn.disabled = true;
-      break;
     case 'waiting-draw':
       drawCardBtn.style.display = 'block';
       drawCardBtn.disabled = false;
@@ -183,9 +178,8 @@ const phaseLabels = {
   'setup': 'Setup',
   'player-turn': 'Waiting to roll',
   'rolling': 'Rolling dice...',
-  'category-reveal': 'Category shown on TV',
-  'waiting-draw': 'Ready to reveal card',
-  'card-reveal': 'Card shown',
+  'waiting-draw': 'Card face-down — ready to reveal',
+  'card-reveal': 'Card revealed',
   'timer-running': 'Timer running',
   'turn-end': 'Turn complete'
 };
@@ -205,42 +199,44 @@ function updateUI(gameState) {
 
   phaseDisplay.textContent = phaseLabels[gameState.phase] || gameState.phase;
 
-  if (gameState.lastCategory) {
-    categoryDisplay.textContent = gameState.lastCategory.icon + ' ' + gameState.lastCategory.name;
-    categoryDisplay.style.color = gameState.lastCategory.color;
+  // No category shown before reveal — only show after card is drawn
+  if (gameState.lastCard) {
+    const card = gameState.lastCard;
+    if (card.isWild) {
+      categoryDisplay.textContent = '\ud83c\udccf WILD';
+      categoryDisplay.style.color = '#FFD700';
+    } else if (card.isILoveYou) {
+      categoryDisplay.textContent = '\u2764\ufe0f I LOVE YOU';
+      categoryDisplay.style.color = '#FF69B4';
+    } else {
+      categoryDisplay.textContent = card.category.icon + ' ' + card.category.name;
+      categoryDisplay.style.color = card.category.color;
+    }
+    cardDisplay.textContent = card.text.substring(0, 50) + (card.text.length > 50 ? '...' : '');
   } else {
     categoryDisplay.textContent = '-';
     categoryDisplay.style.color = '';
-  }
-
-  if (gameState.lastCard) {
-    cardDisplay.textContent = gameState.lastCard.text.substring(0, 50) + (gameState.lastCard.text.length > 50 ? '...' : '');
-  } else {
     cardDisplay.textContent = '-';
   }
 
-  fetchCardCounts();
+  // Update deck remaining count
+  updateDeckCount(gameState);
 }
 
-async function fetchCardCounts() {
-  try {
-    const res = await fetch('/api/cards');
-    const data = await res.json();
-    cardCountsEl.innerHTML = '';
-    data.forEach(cat => {
-      const item = document.createElement('div');
-      item.className = 'card-count-item';
-      item.innerHTML = `<span class="cat-name">${cat.name}</span><span class="cat-count">${cat.remaining}/${cat.total}</span>`;
-      cardCountsEl.appendChild(item);
-    });
-  } catch (err) { /* silent */ }
+function updateDeckCount(gameState) {
+  cardCountsEl.innerHTML = '';
+  const remaining = gameState.cardsRemaining || 0;
+  const total = gameState.totalCards || 72;
+  const item = document.createElement('div');
+  item.className = 'card-count-item';
+  item.innerHTML = `<span class="cat-name">Deck</span><span class="cat-count">${remaining}/${total}</span>`;
+  cardCountsEl.appendChild(item);
 }
 
 // Socket events
 socket.on('state-sync', (s) => updateUI(s));
 socket.on('game-started', (data) => updateUI(data.state));
 socket.on('dice-result', (data) => updateUI(data.state));
-socket.on('category-reveal', (data) => updateUI(data.state));
 socket.on('dice-settled', (data) => updateUI(data.state));
 let lastCardHasTimer = false;
 socket.on('card-drawn', (data) => {
