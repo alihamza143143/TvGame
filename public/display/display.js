@@ -59,15 +59,17 @@ const faceRotations = {
 
 let currentDiceRotation = { x: -20, y: 20 };
 
-// Build dice faces with category icons and colors (visual only)
+// Build dice faces — abstract colors and numbers only, NO category names or icons
 function buildDiceFaces() {
-  categories.forEach((cat, i) => {
+  const faceColors = ['#E74C3C', '#3498DB', '#2ECC71', '#F39C12', '#9B59B6', '#E67E22'];
+  const faceSymbols = ['\u2726', '\u2605', '\u2666', '\u25cf', '\u2764', '\u2736'];
+  for (let i = 0; i < 6; i++) {
     const face = document.querySelector('.face-' + (i + 1));
     if (face) {
-      face.style.background = `linear-gradient(135deg, ${cat.color}, ${cat.color}CC)`;
-      face.innerHTML = `<span class="face-icon">${cat.icon}</span><span class="face-name">${cat.name}</span>`;
+      face.style.background = `linear-gradient(135deg, ${faceColors[i]}, ${faceColors[i]}AA)`;
+      face.innerHTML = `<span class="face-icon">${faceSymbols[i]}</span>`;
     }
-  });
+  }
 }
 
 // Show screen
@@ -133,10 +135,14 @@ function animateDice(roll) {
     currentDiceRotation = { x: finalX, y: finalY };
   }, 4500);
 
-  // Bounce on landing
+  // Bounce on landing, then immediately transition to face-down card
   setTimeout(() => {
     scene.classList.remove('rolling-glow');
     scene.classList.add('bounce');
+    // Auto-transition to face-down card after brief bounce
+    setTimeout(() => {
+      showWaitDraw();
+    }, 400);
   }, 7000);
 }
 
