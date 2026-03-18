@@ -30,50 +30,18 @@ const state = {
   round: 1
 };
 
-// Pre-load all static files into memory at startup (works in both pkg and dev)
-const staticFiles = {};
-const mimeTypes = { '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript' };
+// Serve static files from public directory (works in both pkg snapshot and dev)
+const publicDir = path.join(__dirname, 'public');
+app.use('/host', express.static(path.join(publicDir, 'host')));
+app.use('/display', express.static(path.join(publicDir, 'display')));
+app.use('/shared', express.static(path.join(publicDir, 'shared')));
 
-// These path.join(__dirname, ...) calls let pkg detect and bundle the files
-const fileMappings = [
-  ['/host', path.join(__dirname, 'public', 'host', 'index.html')],
-  ['/host/', path.join(__dirname, 'public', 'host', 'index.html')],
-  ['/host/index.html', path.join(__dirname, 'public', 'host', 'index.html')],
-  ['/host/host.css', path.join(__dirname, 'public', 'host', 'host.css')],
-  ['/host/host.js', path.join(__dirname, 'public', 'host', 'host.js')],
-  ['/display', path.join(__dirname, 'public', 'display', 'index.html')],
-  ['/display/', path.join(__dirname, 'public', 'display', 'index.html')],
-  ['/display/index.html', path.join(__dirname, 'public', 'display', 'index.html')],
-  ['/display/display.css', path.join(__dirname, 'public', 'display', 'display.css')],
-  ['/display/display.js', path.join(__dirname, 'public', 'display', 'display.js')]
-];
-
-// Load all files into memory
-fileMappings.forEach(([route, filePath]) => {
-  try {
-    staticFiles[route] = {
-      content: fs.readFileSync(filePath, 'utf8'),
-      mime: mimeTypes[path.extname(filePath)] || 'text/plain'
-    };
-  } catch (e) {
-    console.log('  Warning: Could not load', filePath);
-  }
-});
-
-// Serve pre-loaded files
-fileMappings.forEach(([route]) => {
-  app.get(route, (req, res) => {
-    const file = staticFiles[route];
-    if (file) {
-      res.type(file.mime).send(file.content);
-    } else {
-      res.status(404).send('File not found');
-    }
-  });
-});
-
-// Routes
+// Routes — serve index.html for /host and /display
 app.get('/', (req, res) => res.redirect('/display'));
+app.get('/host', (req, res) => res.sendFile(path.join(publicDir, 'host', 'index.html')));
+app.get('/host/', (req, res) => res.sendFile(path.join(publicDir, 'host', 'index.html')));
+app.get('/display', (req, res) => res.sendFile(path.join(publicDir, 'display', 'index.html')));
+app.get('/display/', (req, res) => res.sendFile(path.join(publicDir, 'display', 'index.html')));
 
 // API to get cards (with accurate remaining counts from shuffled decks)
 app.get('/api/cards', (req, res) => {
