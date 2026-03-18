@@ -17,7 +17,7 @@ const baseDir = isPkg ? path.dirname(process.execPath) : __dirname;
 
 // Game state
 const state = {
-  phase: 'setup',  // setup | player-turn | rolling | waiting-draw | card-reveal | timer-running | turn-end
+  phase: 'setup',  // setup | player-turn | rolling | category-reveal | waiting-draw | card-reveal | timer-running | turn-end
   players: [],
   currentPlayerIndex: 0,
   lastRoll: null,
@@ -25,7 +25,7 @@ const state = {
   lastCard: null,
   timerSeconds: 30,
   timerRunning: false,
-  usedCards: {},       // { categoryId: Set of used indices }
+  cardDecks: {},       // { categoryId: [shuffled array of card indices] }
   categoryQueue: [],   // Shuffled queue of category IDs
   round: 1
 };
@@ -75,21 +75,20 @@ fileMappings.forEach(([route]) => {
 // Routes
 app.get('/', (req, res) => res.redirect('/display'));
 
-// API to get cards (with accurate remaining counts)
+// API to get cards (with accurate remaining counts from shuffled decks)
 app.get('/api/cards', (req, res) => {
   try {
     const data = JSON.parse(fs.readFileSync(path.join(baseDir, 'cards.json'), 'utf8'));
     const summary = data.categories.map(cat => {
-      const usedSet = state.usedCards[cat.id];
-      const usedCount = usedSet ? usedSet.size : 0;
+      const deck = state.cardDecks[cat.id];
+      const remaining = deck ? deck.length : cat.cards.length;
       return {
         id: cat.id,
         name: cat.name,
         color: cat.color,
         icon: cat.icon,
         total: cat.cards.length,
-        used: usedCount,
-        remaining: cat.cards.length - usedCount
+        remaining: remaining
       };
     });
     res.json(summary);
@@ -102,8 +101,24 @@ function loadCards() {
   return JSON.parse(fs.readFileSync(path.join(baseDir, 'cards.json'), 'utf8'));
 }
 
+// Serialize state for clients (cardDecks only sends counts, not indices)
 function getFullState() {
-  return { ...state };
+  const cardCounts = {};
+  for (const [catId, deck] of Object.entries(state.cardDecks)) {
+    cardCounts[catId] = deck.length;
+  }
+  return {
+    phase: state.phase,
+    players: state.players,
+    currentPlayerIndex: state.currentPlayerIndex,
+    lastRoll: state.lastRoll,
+    lastCategory: state.lastCategory,
+    lastCard: state.lastCard,
+    timerSeconds: state.timerSeconds,
+    timerRunning: state.timerRunning,
+    cardCounts: cardCounts,
+    round: state.round
+  };
 }
 
 // Fisher-Yates shuffle
@@ -114,6 +129,12 @@ function shuffle(array) {
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
   return arr;
+}
+
+// Build shuffled card deck for a category (array of indices)
+function buildCardDeck(categoryCards) {
+  const indices = categoryCards.map((_, i) => i);
+  return shuffle(indices);
 }
 
 // Build a shuffled category queue (ensures even distribution)
@@ -173,14 +194,16 @@ io.on('connection', (socket) => {
       state.phase = 'player-turn';
       state.round = 1;
 
-      // Initialize used cards as Sets for each category
-      state.usedCards = {};
+      // Build pre-shuffled card decks for each category
+      state.cardDecks = {};
       try {
         const data = loadCards();
         data.categories.forEach(cat => {
-          state.usedCards[cat.id] = new Set();
+          state.cardDecks[cat.id] = buildCardDeck(cat.cards);
         });
-      } catch (e) {}
+      } catch (e) {
+        console.log('Error loading cards:', e.message);
+      }
 
       // Build initial shuffled category queue
       buildCategoryQueue();
@@ -207,21 +230,26 @@ io.on('connection', (socket) => {
       state.lastCard = null;
       state.phase = 'rolling';
 
-      // Send the dice roll (visual only - categories still shown on dice faces)
+      // Send the dice roll (categories shown on dice faces during animation)
       io.emit('dice-result', { roll: categoryId, category: state.lastCategory, state: getFullState() });
 
-      // After dice animation completes (~7s), move to waiting-draw phase
-      // NO category reveal - host just gets "Reveal Card" button
+      // After dice animation completes (~7s), show category reveal then move to waiting-draw
+      setTimeout(() => {
+        state.phase = 'category-reveal';
+        io.emit('category-reveal', { category: state.lastCategory, state: getFullState() });
+      }, 7500);
+
+      // After category reveal pause (~3s), move to waiting-draw
       setTimeout(() => {
         state.phase = 'waiting-draw';
-        io.emit('dice-settled', { state: getFullState() });
-      }, 7500);
+        io.emit('dice-settled', { category: state.lastCategory, state: getFullState() });
+      }, 10500);
     } catch (err) {
       socket.emit('error-msg', { message: 'Failed to read cards.json: ' + err.message });
     }
   });
 
-  // Draw card (no repeats until category exhausted)
+  // Draw card (pop from pre-shuffled deck — guaranteed no repeats)
   socket.on('draw-card', () => {
     if (state.phase !== 'waiting-draw') {
       socket.emit('error-msg', { message: 'Wait for dice to settle first!' });
@@ -236,29 +264,14 @@ io.on('connection', (socket) => {
         return;
       }
 
-      // Ensure we have a Set for this category
-      if (!state.usedCards[category.id]) {
-        state.usedCards[category.id] = new Set();
+      // Ensure deck exists
+      if (!state.cardDecks[category.id] || state.cardDecks[category.id].length === 0) {
+        // Deck exhausted — reshuffle
+        state.cardDecks[category.id] = buildCardDeck(category.cards);
       }
 
-      // Get available (unused) cards
-      let availableIndices = [];
-      for (let i = 0; i < category.cards.length; i++) {
-        if (!state.usedCards[category.id].has(i)) {
-          availableIndices.push(i);
-        }
-      }
-
-      // If all cards used, reset this category's deck
-      if (availableIndices.length === 0) {
-        state.usedCards[category.id] = new Set();
-        availableIndices = category.cards.map((_, i) => i);
-      }
-
-      // Pick a random card from available
-      const pickedIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
-      state.usedCards[category.id].add(pickedIndex);
-
+      // Pop next card from shuffled deck
+      const pickedIndex = state.cardDecks[category.id].pop();
       const picked = category.cards[pickedIndex];
 
       // Check if this is a Wild or I Love You card
@@ -328,7 +341,7 @@ io.on('connection', (socket) => {
     state.lastRoll = null;
     state.lastCategory = null;
     state.lastCard = null;
-    state.usedCards = {};
+    state.cardDecks = {};
     state.categoryQueue = [];
     state.round = 1;
     clearInterval(timerInterval);

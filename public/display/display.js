@@ -17,6 +17,7 @@ const screens = {
   setup: document.getElementById('setupScreen'),
   playerTurn: document.getElementById('playerTurnScreen'),
   dice: document.getElementById('diceScreen'),
+  categoryReveal: document.getElementById('categoryRevealScreen'),
   waitDraw: document.getElementById('waitDrawScreen'),
   card: document.getElementById('cardScreen'),
   timer: document.getElementById('timerScreen'),
@@ -27,7 +28,17 @@ const diceCube = document.getElementById('diceCube');
 const turnPlayerName = document.getElementById('turnPlayerName');
 const roundInfo = document.getElementById('roundInfo');
 const dicePlayerName = document.getElementById('dicePlayerName');
+
+// Category reveal elements
+const catRevealIcon = document.getElementById('catRevealIcon');
+const catRevealName = document.getElementById('catRevealName');
+const catRevealPlayer = document.getElementById('catRevealPlayer');
+
+// Wait draw elements
+const waitDrawCategory = document.getElementById('waitDrawCategory');
 const waitDrawPlayer = document.getElementById('waitDrawPlayer');
+
+// Card elements
 const cardFullscreen = document.getElementById('cardFullscreen');
 const cardTopBar = document.getElementById('cardTopBar');
 const cardCatIcon = document.getElementById('cardCatIcon');
@@ -35,6 +46,8 @@ const cardCatName = document.getElementById('cardCatName');
 const cardMainText = document.getElementById('cardMainText');
 const cardPlayerTag = document.getElementById('cardPlayerTag');
 const cardTone = document.getElementById('cardTone');
+
+// Timer elements
 const timerCardText = document.getElementById('timerCardText');
 const timerNumber = document.getElementById('timerNumber');
 const timerProgress = document.getElementById('timerProgress');
@@ -71,7 +84,6 @@ function showScreen(name) {
 }
 
 // 3D dice roll animation - 3 phases for maximum suspense
-// Category is NOT revealed after dice — no text label shown
 function animateDice(roll) {
   showScreen('dice');
   dicePlayerName.textContent = currentPlayer;
@@ -85,13 +97,13 @@ function animateDice(roll) {
   // Phase 1: Wild fast chaotic tumble
   const dir1 = Math.random() > 0.5 ? 1 : -1;
   const dir2 = Math.random() > 0.5 ? 1 : -1;
-  const tumbleX = dir1 * (Math.floor(Math.random() * 3) + 3) * 360;
-  const tumbleY = dir2 * (Math.floor(Math.random() * 3) + 3) * 360;
+  const tumbleX = dir1 * (Math.floor(Math.random() * 3) + 4) * 360;
+  const tumbleY = dir2 * (Math.floor(Math.random() * 3) + 4) * 360;
   const tumbleZ = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 2) + 2) * 360;
 
   // Phase 2: Medium speed random direction
-  const midX = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 2) + 2) * 360;
-  const midY = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 2) + 2) * 360;
+  const midX = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 2) + 3) * 360;
+  const midY = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 2) + 3) * 360;
   const midZ = (Math.random() > 0.5 ? 1 : -1) * 360;
 
   // Phase 3: Settle onto target face
@@ -109,44 +121,67 @@ function animateDice(roll) {
   diceCube.style.transform = `rotateX(${runX}deg) rotateY(${runY}deg) rotateZ(0deg)`;
   diceCube.offsetHeight;
 
-  // Phase 1: Fast chaotic tumble (0 - 2s)
-  diceCube.style.transition = 'transform 2s cubic-bezier(0.4, 0, 0.8, 0.4)';
+  // Phase 1: Fast chaotic tumble (0 - 2.5s)
+  diceCube.style.transition = 'transform 2.5s cubic-bezier(0.4, 0, 0.8, 0.4)';
   runX += tumbleX;
   runY += tumbleY;
   diceCube.style.transform = `rotateX(${runX}deg) rotateY(${runY}deg) rotateZ(${tumbleZ}deg)`;
 
-  // Phase 2: Medium tumble, changing direction (2s - 4s)
+  // Phase 2: Medium tumble, changing direction (2.5s - 5s)
   setTimeout(() => {
-    diceCube.style.transition = 'transform 2s cubic-bezier(0.3, 0, 0.6, 0.5)';
+    diceCube.style.transition = 'transform 2.5s cubic-bezier(0.3, 0, 0.6, 0.5)';
     runX += midX;
     runY += midY;
     diceCube.style.transform = `rotateX(${runX}deg) rotateY(${runY}deg) rotateZ(${tumbleZ + midZ}deg)`;
-  }, 1800);
+  }, 2200);
 
-  // Phase 3: Slow settle onto final face (4s - 7s)
+  // Phase 3: Slow settle onto final face (5s - 7.5s)
   setTimeout(() => {
     diceCube.style.transition = 'transform 3s cubic-bezier(0.05, 0.7, 0.1, 1)';
     diceCube.style.transform = `rotateX(${finalX}deg) rotateY(${finalY}deg) rotateZ(0deg)`;
     currentDiceRotation = { x: finalX, y: finalY };
-  }, 3600);
+  }, 4500);
 
-  // Bounce effect when landing (at ~6.5s)
+  // Bounce effect when landing
   setTimeout(() => {
     scene.classList.remove('rolling-glow');
     scene.classList.add('bounce');
-  }, 6200);
-
-  // No category label shown — dice just settles, suspense builds
+  }, 7000);
 }
 
-// Waiting for host to press "Reveal Card"
-function showWaitDraw() {
+// Category reveal screen — shows category after dice settles
+function showCategoryReveal(category) {
+  showScreen('categoryReveal');
+
+  const revealContent = document.querySelector('.category-reveal-content');
+  revealContent.style.borderColor = category.color;
+
+  catRevealIcon.textContent = category.icon;
+  catRevealIcon.style.color = category.color;
+  catRevealName.textContent = category.name;
+  catRevealName.style.color = category.color;
+  catRevealPlayer.textContent = currentPlayer;
+
+  // Re-trigger animation
+  revealContent.style.animation = 'none';
+  revealContent.offsetHeight;
+  revealContent.style.animation = 'categoryBurst 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)';
+}
+
+// Waiting for host to press "Reveal Card" — shows category
+function showWaitDraw(category) {
   showScreen('waitDraw');
+  if (category) {
+    waitDrawCategory.textContent = category.icon + ' ' + category.name;
+    waitDrawCategory.style.color = category.color;
+  }
   waitDrawPlayer.textContent = currentPlayer;
 }
 
-// Card reveal (full screen) — category shown here for the first time
-// Wild cards show "WILD" instead of category
+// Card reveal (full screen)
+// Standard cards: show category
+// Wild cards: show "WILD" only, no category
+// I Love You cards: show "I LOVE YOU" only
 function showCard(card) {
   showScreen('card');
 
@@ -155,19 +190,16 @@ function showCard(card) {
   const isILoveYou = card.isILoveYou;
 
   if (isWild) {
-    // Wild card — no category, just "WILD" styling
     cardFullscreen.style.background = 'radial-gradient(circle at center, #FFD70030 0%, #0a0a1a 60%)';
     cardTopBar.style.color = '#FFD700';
     cardCatIcon.textContent = '\ud83c\udccf';
     cardCatName.textContent = 'WILD';
   } else if (isILoveYou) {
-    // I Love You card
     cardFullscreen.style.background = 'radial-gradient(circle at center, #FF69B430 0%, #0a0a1a 60%)';
     cardTopBar.style.color = '#FF69B4';
     cardCatIcon.textContent = '\u2764\ufe0f';
     cardCatName.textContent = 'I LOVE YOU';
   } else {
-    // Normal card — show category
     cardFullscreen.style.background = `radial-gradient(circle at center, ${cat.color}20 0%, #0a0a1a 60%)`;
     cardTopBar.style.color = cat.color;
     cardCatIcon.textContent = cat.icon;
@@ -176,8 +208,7 @@ function showCard(card) {
 
   cardPlayerTag.textContent = currentPlayer;
 
-  // Format card text - preserve line breaks
-  // For wild/ILY cards, strip the prefix since we show it in the top bar
+  // Format card text - strip prefix for Wild/ILY since shown in top bar
   let displayText = card.text;
   if (isWild) {
     displayText = displayText.replace(/^\ud83c\udccf\s*WILD\s*\n*/, '');
@@ -195,7 +226,7 @@ function showCard(card) {
     cardTone.style.display = 'none';
   }
 
-  // Re-trigger animation
+  // Re-trigger flip animation
   cardFullscreen.style.animation = 'none';
   cardFullscreen.offsetHeight;
   cardFullscreen.style.animation = 'cardFlipIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)';
@@ -253,8 +284,10 @@ socket.on('state-sync', (state) => {
     turnPlayerName.textContent = currentPlayer;
     roundInfo.textContent = 'Round ' + (state.round || 1);
     showScreen('playerTurn');
+  } else if (state.phase === 'category-reveal' && state.lastCategory) {
+    showCategoryReveal(state.lastCategory);
   } else if (state.phase === 'waiting-draw') {
-    showWaitDraw();
+    showWaitDraw(state.lastCategory);
   } else if (state.phase === 'card-reveal' && state.lastCard) {
     showCard(state.lastCard);
   } else if (state.phase === 'turn-end') {
@@ -276,9 +309,16 @@ socket.on('dice-result', (data) => {
   }
 });
 
-// Dice has settled — show waiting screen
-socket.on('dice-settled', () => {
-  showWaitDraw();
+// Category revealed after dice settles
+socket.on('category-reveal', (data) => {
+  if (data.category) {
+    showCategoryReveal(data.category);
+  }
+});
+
+// Dice has settled — show waiting screen with category
+socket.on('dice-settled', (data) => {
+  showWaitDraw(data.category);
 });
 
 socket.on('card-drawn', (data) => {
