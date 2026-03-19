@@ -117,10 +117,12 @@ body {
 }
 
 .dice-player-name {
-  font-size: clamp(1.5rem, 3vw, 2.5rem);
+  font-size: clamp(2.5rem, 5vw, 4rem);
   color: #F39C12;
-  font-weight: 700;
-  margin-bottom: 5vh;
+  font-weight: 800;
+  margin-bottom: 8vh;
+  text-transform: uppercase;
+  letter-spacing: 3px;
 }
 
 .dice-scene {
