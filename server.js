@@ -181,11 +181,11 @@ io.on('connection', (socket) => {
       // Send dice roll — category will be shown on dice face
       io.emit('dice-result', { roll: categoryId, category: state.lastCategory, state: getFullState() });
 
-      // After dice animation, transition to waiting-draw (face-down card + category shown)
+      // After dice animation (5.5s), transition to waiting-draw (face-down card, no category)
       setTimeout(() => {
         state.phase = 'waiting-draw';
-        io.emit('dice-settled', { category: state.lastCategory, state: getFullState() });
-      }, 7500);
+        io.emit('dice-settled', { state: getFullState() });
+      }, 5500);
     } catch (err) {
       socket.emit('error-msg', { message: err.message });
     }

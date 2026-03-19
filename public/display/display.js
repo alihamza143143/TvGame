@@ -11,7 +11,6 @@ const categories = [
 ];
 let currentPlayer = '';
 let totalTimerSeconds = 60;
-let pendingCategory = null; // Category from dice roll, shown after dice lands
 
 // DOM
 const screens = {
@@ -30,7 +29,6 @@ const roundInfo = document.getElementById('roundInfo');
 const dicePlayerName = document.getElementById('dicePlayerName');
 
 // Wait draw elements
-const waitDrawCategory = document.getElementById('waitDrawCategory');
 const waitDrawPlayer = document.getElementById('waitDrawPlayer');
 
 // Card elements
@@ -49,19 +47,9 @@ const timerProgress = document.getElementById('timerProgress');
 const timerPlayer = document.getElementById('timerPlayer');
 const turnEndPlayer = document.getElementById('turnEndPlayer');
 
-// Dice face target rotations
-const faceRotations = {
-  1: { x: 0, y: 0 },
-  2: { x: 0, y: -90 },
-  3: { x: -90, y: 0 },
-  4: { x: 90, y: 0 },
-  5: { x: 0, y: 90 },
-  6: { x: 0, y: 180 }
-};
-
 let currentDiceRotation = { x: -20, y: 20 };
 
-// Build dice faces WITH category names and icons
+// Build dice faces with category colors and icons
 function buildDiceFaces() {
   categories.forEach((cat, i) => {
     const face = document.querySelector('.face-' + (i + 1));
@@ -78,8 +66,9 @@ function showScreen(name) {
   if (screens[name]) screens[name].classList.add('active');
 }
 
-// 3D dice roll animation
-function animateDice(roll) {
+// 3D dice roll animation — spins fast the entire time, then CUTS to face-down card
+// The dice NEVER settles or slows down visibly. User cannot see which face it lands on.
+function animateDice() {
   showScreen('dice');
   dicePlayerName.textContent = currentPlayer;
 
@@ -87,65 +76,59 @@ function animateDice(roll) {
   scene.classList.add('rolling-glow');
   scene.classList.remove('bounce');
 
-  const target = faceRotations[roll];
-
-  // Phase 1: Wild fast chaotic tumble
+  // Random chaotic directions — dice just tumbles wildly
   const dir1 = Math.random() > 0.5 ? 1 : -1;
   const dir2 = Math.random() > 0.5 ? 1 : -1;
-  const tumbleX = dir1 * (Math.floor(Math.random() * 3) + 4) * 360;
-  const tumbleY = dir2 * (Math.floor(Math.random() * 3) + 4) * 360;
-  const tumbleZ = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 2) + 2) * 360;
 
-  // Phase 2: Medium speed
-  const midX = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 2) + 3) * 360;
-  const midY = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 2) + 3) * 360;
-  const midZ = (Math.random() > 0.5 ? 1 : -1) * 360;
+  // Phase 1: Fast chaotic tumble (0 - 3s)
+  const tumbleX = dir1 * (Math.floor(Math.random() * 4) + 5) * 360;
+  const tumbleY = dir2 * (Math.floor(Math.random() * 4) + 5) * 360;
+  const tumbleZ = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 3) + 3) * 360;
 
-  // Phase 3: Settle
-  const settleSpinsX = (Math.floor(Math.random() * 2) + 2) * 360;
-  const settleSpinsY = (Math.floor(Math.random() * 2) + 2) * 360;
-  const finalX = settleSpinsX + target.x;
-  const finalY = settleSpinsY + target.y;
+  // Phase 2: Still fast, different direction (3s - 5.5s)
+  const midX = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 3) + 4) * 360;
+  const midY = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 3) + 4) * 360;
+  const midZ = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 2) + 2) * 360;
 
   let runX = currentDiceRotation.x;
   let runY = currentDiceRotation.y;
 
+  // Snap to current position
   diceCube.style.transition = 'none';
   diceCube.style.transform = `rotateX(${runX}deg) rotateY(${runY}deg) rotateZ(0deg)`;
   diceCube.offsetHeight;
 
-  // Phase 1: Fast tumble (0 - 2.5s)
-  diceCube.style.transition = 'transform 2.5s cubic-bezier(0.4, 0, 0.8, 0.4)';
+  // Phase 1: Fast chaotic tumble (0 - 3s)
+  diceCube.style.transition = 'transform 3s linear';
   runX += tumbleX;
   runY += tumbleY;
   diceCube.style.transform = `rotateX(${runX}deg) rotateY(${runY}deg) rotateZ(${tumbleZ}deg)`;
 
-  // Phase 2: Medium tumble (2.5s - 5s)
+  // Phase 2: Still spinning fast, different direction (3s - 5.5s)
   setTimeout(() => {
-    diceCube.style.transition = 'transform 2.5s cubic-bezier(0.3, 0, 0.6, 0.5)';
+    diceCube.style.transition = 'transform 2.5s linear';
     runX += midX;
     runY += midY;
     diceCube.style.transform = `rotateX(${runX}deg) rotateY(${runY}deg) rotateZ(${tumbleZ + midZ}deg)`;
-  }, 2200);
+  }, 2800);
 
-  // Phase 3: Slow settle (5s - 7.5s)
+  // Save rotation for next roll
   setTimeout(() => {
-    diceCube.style.transition = 'transform 3s cubic-bezier(0.05, 0.7, 0.1, 1)';
-    diceCube.style.transform = `rotateX(${finalX}deg) rotateY(${finalY}deg) rotateZ(0deg)`;
-    currentDiceRotation = { x: finalX, y: finalY };
-  }, 4500);
+    currentDiceRotation = { x: runX + midX, y: runY + midY };
+  }, 5000);
 
-  // Bounce then transition to wait-draw with category shown
+  // At 5.5s — while STILL spinning fast — hard cut to face-down card
+  // No settling. No slowing down. Just: spinning → face-down card.
   setTimeout(() => {
     scene.classList.remove('rolling-glow');
-    scene.classList.add('bounce');
-  }, 7000);
+    showWaitDraw();
+  }, 5500);
 }
 
-// Wait-draw screen: shows CATEGORY + face-down card (no card TYPE hint)
-// Card back must ALWAYS look identical regardless of what card is selected
-function showWaitDraw(category) {
-  // Clear any previous card content first to prevent flash/peek
+// Wait-draw screen: face-down card ONLY. NO category. NO hints.
+// Category is revealed ONLY when card is flipped.
+function showWaitDraw() {
+  // Clear any previous card content to prevent flash
   cardMainText.innerHTML = '';
   cardCatIcon.textContent = '';
   cardCatName.textContent = '';
@@ -154,14 +137,11 @@ function showWaitDraw(category) {
   cardFullscreen.style.animation = 'none';
 
   showScreen('waitDraw');
-  if (category) {
-    waitDrawCategory.textContent = category.icon + ' ' + category.name;
-    waitDrawCategory.style.color = category.color;
-  }
   waitDrawPlayer.textContent = currentPlayer;
 }
 
-// Card reveal — shows card TYPE (Wild/ILY/standard) + instructions
+// Card reveal — shows category + card TYPE (Wild/ILY/standard) + instructions
+// This is the ONLY moment ANYTHING about the card is revealed
 function showCard(card) {
   showScreen('card');
 
@@ -254,7 +234,7 @@ socket.on('state-sync', (state) => {
     roundInfo.textContent = 'Round ' + (state.round || 1);
     showScreen('playerTurn');
   } else if (state.phase === 'waiting-draw') {
-    showWaitDraw(state.lastCategory);
+    showWaitDraw();
   } else if (state.phase === 'card-reveal' && state.lastCard) {
     showCard(state.lastCard);
   } else if (state.phase === 'turn-end') {
@@ -271,16 +251,15 @@ socket.on('game-started', (data) => {
 });
 
 socket.on('dice-result', (data) => {
-  pendingCategory = data.category;
-  if (data.roll) animateDice(data.roll);
+  if (data.roll) animateDice();
 });
 
-// Dice settled — show category + face-down card
-socket.on('dice-settled', (data) => {
-  showWaitDraw(data.category);
+// Dice settled — show face-down card (no category)
+socket.on('dice-settled', () => {
+  showWaitDraw();
 });
 
-// Card revealed — NOW show card type + content
+// Card revealed — NOW show category + card type + content
 socket.on('card-drawn', (data) => {
   showCard(data.card);
 });
@@ -302,5 +281,5 @@ socket.on('player-changed', (data) => {
   showScreen('playerTurn');
 });
 
-// Init — dice faces show category names + icons
+// Init
 buildDiceFaces();
