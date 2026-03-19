@@ -1,6 +1,6 @@
 const socket = io();
 
-// 6 categories for dice face visuals only
+// 6 categories (matches cards.json)
 const categories = [
   { id: 1, name: 'Personal Call', color: '#E74C3C', icon: '\ud83d\udcf1' },
   { id: 2, name: 'Business Call', color: '#3498DB', icon: '\ud83d\udcde' },
@@ -11,6 +11,7 @@ const categories = [
 ];
 let currentPlayer = '';
 let totalTimerSeconds = 60;
+let pendingCategory = null; // Category from dice roll, shown after dice lands
 
 // DOM
 const screens = {
@@ -28,7 +29,8 @@ const turnPlayerName = document.getElementById('turnPlayerName');
 const roundInfo = document.getElementById('roundInfo');
 const dicePlayerName = document.getElementById('dicePlayerName');
 
-// Wait draw elements (face-down card — NO category shown)
+// Wait draw elements
+const waitDrawCategory = document.getElementById('waitDrawCategory');
 const waitDrawPlayer = document.getElementById('waitDrawPlayer');
 
 // Card elements
@@ -59,17 +61,15 @@ const faceRotations = {
 
 let currentDiceRotation = { x: -20, y: 20 };
 
-// Build dice faces — abstract colors and numbers only, NO category names or icons
+// Build dice faces WITH category names and icons
 function buildDiceFaces() {
-  const faceColors = ['#E74C3C', '#3498DB', '#2ECC71', '#F39C12', '#9B59B6', '#E67E22'];
-  const faceSymbols = ['\u2726', '\u2605', '\u2666', '\u25cf', '\u2764', '\u2736'];
-  for (let i = 0; i < 6; i++) {
+  categories.forEach((cat, i) => {
     const face = document.querySelector('.face-' + (i + 1));
     if (face) {
-      face.style.background = `linear-gradient(135deg, ${faceColors[i]}, ${faceColors[i]}AA)`;
-      face.innerHTML = `<span class="face-icon">${faceSymbols[i]}</span>`;
+      face.style.background = `linear-gradient(135deg, ${cat.color}, ${cat.color}CC)`;
+      face.innerHTML = `<span class="face-icon">${cat.icon}</span><span class="face-name">${cat.name}</span>`;
     }
-  }
+  });
 }
 
 // Show screen
@@ -78,7 +78,7 @@ function showScreen(name) {
   if (screens[name]) screens[name].classList.add('active');
 }
 
-// 3D dice roll animation — purely visual, does NOT determine the card
+// 3D dice roll animation
 function animateDice(roll) {
   showScreen('dice');
   dicePlayerName.textContent = currentPlayer;
@@ -135,24 +135,24 @@ function animateDice(roll) {
     currentDiceRotation = { x: finalX, y: finalY };
   }, 4500);
 
-  // Bounce on landing, then immediately transition to face-down card
+  // Bounce then transition to wait-draw with category shown
   setTimeout(() => {
     scene.classList.remove('rolling-glow');
     scene.classList.add('bounce');
-    // Auto-transition to face-down card after brief bounce
-    setTimeout(() => {
-      showWaitDraw();
-    }, 400);
   }, 7000);
 }
 
-// Show face-down card — NO category, NO hints, just a card back
-function showWaitDraw() {
+// Wait-draw screen: shows CATEGORY + face-down card (no card TYPE hint)
+function showWaitDraw(category) {
   showScreen('waitDraw');
+  if (category) {
+    waitDrawCategory.textContent = category.icon + ' ' + category.name;
+    waitDrawCategory.style.color = category.color;
+  }
   waitDrawPlayer.textContent = currentPlayer;
 }
 
-// Card reveal — THIS is the ONLY moment category + content appear
+// Card reveal — shows card TYPE (Wild/ILY/standard) + instructions
 function showCard(card) {
   showScreen('card');
 
@@ -179,7 +179,6 @@ function showCard(card) {
 
   cardPlayerTag.textContent = currentPlayer;
 
-  // Format card text — strip prefix for Wild/ILY since shown in top bar
   let displayText = card.text;
   if (isWild) {
     displayText = displayText.replace(/^\ud83c\udccf\s*WILD\s*\n*/, '');
@@ -188,7 +187,6 @@ function showCard(card) {
   }
   cardMainText.innerHTML = displayText.replace(/\n/g, '<br>');
 
-  // Show tone if present
   if (card.tone) {
     cardTone.textContent = 'TONE: ' + card.tone.toUpperCase();
     cardTone.style.display = 'block';
@@ -197,7 +195,6 @@ function showCard(card) {
     cardTone.style.display = 'none';
   }
 
-  // Card flip animation
   cardFullscreen.style.animation = 'none';
   cardFullscreen.offsetHeight;
   cardFullscreen.style.animation = 'cardFlipIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)';
@@ -211,7 +208,6 @@ function startTimerDisplay(seconds) {
   timerPlayer.textContent = currentPlayer;
   timerCardText.textContent = '';
   timerNumber.style.color = '#fff';
-
   const circumference = 2 * Math.PI * 90;
   timerProgress.style.strokeDasharray = circumference;
   timerProgress.style.strokeDashoffset = '0';
@@ -220,11 +216,9 @@ function startTimerDisplay(seconds) {
 
 function updateTimer(seconds) {
   timerNumber.textContent = seconds;
-
   const circumference = 2 * Math.PI * 90;
   const progress = 1 - (seconds / totalTimerSeconds);
   timerProgress.style.strokeDashoffset = circumference * progress;
-
   timerProgress.classList.remove('warning', 'danger');
   if (seconds <= 5) {
     timerProgress.classList.add('danger');
@@ -244,19 +238,14 @@ function showTurnEnd(playerName) {
 
 // Socket events
 socket.on('state-sync', (state) => {
-  if (state.phase === 'setup') {
-    showScreen('setup');
-    return;
-  }
-
+  if (state.phase === 'setup') { showScreen('setup'); return; }
   currentPlayer = state.players[state.currentPlayerIndex] || '';
-
   if (state.phase === 'player-turn') {
     turnPlayerName.textContent = currentPlayer;
     roundInfo.textContent = 'Round ' + (state.round || 1);
     showScreen('playerTurn');
   } else if (state.phase === 'waiting-draw') {
-    showWaitDraw();
+    showWaitDraw(state.lastCategory);
   } else if (state.phase === 'card-reveal' && state.lastCard) {
     showCard(state.lastCard);
   } else if (state.phase === 'turn-end') {
@@ -273,35 +262,27 @@ socket.on('game-started', (data) => {
 });
 
 socket.on('dice-result', (data) => {
-  if (data.roll) {
-    animateDice(data.roll);
-  }
+  pendingCategory = data.category;
+  if (data.roll) animateDice(data.roll);
 });
 
-// Dice settled — show face-down card, NO category
-socket.on('dice-settled', () => {
-  showWaitDraw();
+// Dice settled — show category + face-down card
+socket.on('dice-settled', (data) => {
+  showWaitDraw(data.category);
 });
 
-// Card revealed — NOW show category + content
+// Card revealed — NOW show card type + content
 socket.on('card-drawn', (data) => {
   showCard(data.card);
 });
 
-socket.on('timer-start', (data) => {
-  startTimerDisplay(data.seconds);
-});
-
-socket.on('timer-tick', (data) => {
-  updateTimer(data.seconds);
-});
-
+socket.on('timer-start', (data) => startTimerDisplay(data.seconds));
+socket.on('timer-tick', (data) => updateTimer(data.seconds));
 socket.on('timer-end', () => {
   timerNumber.textContent = '0';
   timerNumber.style.color = '#E74C3C';
   setTimeout(() => showTurnEnd(currentPlayer), 1500);
 });
-
 socket.on('timer-stop', () => showTurnEnd(currentPlayer));
 socket.on('turn-completed', () => showTurnEnd(currentPlayer));
 
@@ -312,5 +293,5 @@ socket.on('player-changed', (data) => {
   showScreen('playerTurn');
 });
 
-// Init
+// Init — dice faces show category names + icons
 buildDiceFaces();
