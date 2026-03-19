@@ -143,7 +143,16 @@ function animateDice(roll) {
 }
 
 // Wait-draw screen: shows CATEGORY + face-down card (no card TYPE hint)
+// Card back must ALWAYS look identical regardless of what card is selected
 function showWaitDraw(category) {
+  // Clear any previous card content first to prevent flash/peek
+  cardMainText.innerHTML = '';
+  cardCatIcon.textContent = '';
+  cardCatName.textContent = '';
+  cardTone.style.display = 'none';
+  cardFullscreen.style.background = '';
+  cardFullscreen.style.animation = 'none';
+
   showScreen('waitDraw');
   if (category) {
     waitDrawCategory.textContent = category.icon + ' ' + category.name;
