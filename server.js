@@ -185,8 +185,8 @@ io.on('connection', (socket) => {
     state.lastCard = null;
     state.phase = 'rolling';
 
-    // Send dice roll event (purely visual)
-    io.emit('dice-result', { state: getFullState() });
+    // Send dice roll event (purely visual — roll is just for triggering animation)
+    io.emit('dice-result', { roll: true, state: getFullState() });
 
     // After dice animation (5.5s), transition to waiting-draw (face-down card)
     setTimeout(() => {
