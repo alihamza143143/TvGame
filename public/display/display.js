@@ -20,7 +20,8 @@ const screens = {
   waitDraw: document.getElementById('waitDrawScreen'),
   card: document.getElementById('cardScreen'),
   timer: document.getElementById('timerScreen'),
-  turnEnd: document.getElementById('turnEndScreen')
+  turnEnd: document.getElementById('turnEndScreen'),
+  gameOver: document.getElementById('gameOverScreen')
 };
 
 const diceCube = document.getElementById('diceCube');
@@ -239,6 +240,8 @@ socket.on('state-sync', (state) => {
     showCard(state.lastCard);
   } else if (state.phase === 'turn-end') {
     showTurnEnd(currentPlayer);
+  } else if (state.phase === 'game-over') {
+    showScreen('gameOver');
   }
 });
 
@@ -279,6 +282,10 @@ socket.on('player-changed', (data) => {
   turnPlayerName.textContent = data.player;
   roundInfo.textContent = 'Round ' + (data.round || 1);
   showScreen('playerTurn');
+});
+
+socket.on('game-over', () => {
+  showScreen('gameOver');
 });
 
 // Init

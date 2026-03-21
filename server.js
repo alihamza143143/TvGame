@@ -15,16 +15,15 @@ const baseDir = isPkg ? path.dirname(process.execPath) : __dirname;
 
 // Game state
 const state = {
-  phase: 'setup',  // setup | player-turn | rolling | waiting-draw | card-reveal | timer-running | turn-end
+  phase: 'setup',  // setup | player-turn | rolling | waiting-draw | card-reveal | timer-running | turn-end | game-over
   players: [],
   currentPlayerIndex: 0,
-  lastRoll: null,
-  lastCategory: null,
-  lastCard: null,
+  lastCard: null,         // Only populated AFTER reveal
   timerSeconds: 30,
   timerRunning: false,
-  cardDecks: {},       // { categoryId: [shuffled array of card indices] }
-  categoryQueue: [],   // Shuffled queue of category IDs for even distribution
+  masterDeck: [],         // Single shuffled deck of ALL 72 cards
+  categoryCounts: {},     // { categoryId: { total: 12, remaining: 12 } }
+  totalRemaining: 0,
   round: 1
 };
 
@@ -44,16 +43,11 @@ app.get('/display/', (req, res) => res.sendFile(path.join(publicDir, 'display', 
 // API
 app.get('/api/cards', (req, res) => {
   try {
-    const data = loadCards();
-    const summary = data.categories.map(cat => {
-      const deck = state.cardDecks[cat.id];
-      const remaining = deck ? deck.length : cat.cards.length;
-      return {
-        id: cat.id, name: cat.name, color: cat.color, icon: cat.icon,
-        total: cat.cards.length, remaining: remaining
-      };
-    });
-    res.json(summary);
+    const summary = [];
+    for (const [catId, counts] of Object.entries(state.categoryCounts)) {
+      summary.push({ id: parseInt(catId), ...counts });
+    }
+    res.json({ categories: summary, totalRemaining: state.totalRemaining });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -63,21 +57,18 @@ function loadCards() {
   return JSON.parse(fs.readFileSync(path.join(baseDir, 'cards.json'), 'utf8'));
 }
 
+// State sent to clients — NEVER includes card info before reveal
 function getFullState() {
-  const cardCounts = {};
-  for (const [catId, deck] of Object.entries(state.cardDecks)) {
-    cardCounts[catId] = deck.length;
-  }
   return {
     phase: state.phase,
     players: state.players,
     currentPlayerIndex: state.currentPlayerIndex,
-    lastRoll: state.lastRoll,
-    lastCategory: state.lastCategory,
-    lastCard: state.lastCard,
+    // Only send card info if phase is card-reveal or later
+    lastCard: (state.phase === 'card-reveal' || state.phase === 'timer-running' || state.phase === 'turn-end') ? state.lastCard : null,
     timerSeconds: state.timerSeconds,
     timerRunning: state.timerRunning,
-    cardCounts: cardCounts,
+    categoryCounts: state.categoryCounts,
+    totalRemaining: state.totalRemaining,
     round: state.round
   };
 }
@@ -92,17 +83,40 @@ function shuffle(array) {
   return arr;
 }
 
-function buildCardDeck(categoryCards) {
-  return shuffle(categoryCards.map((_, i) => i));
-}
+// Build ONE master deck of all 72 cards, shuffled once
+function buildMasterDeck() {
+  const data = loadCards();
+  const allCards = [];
 
-function buildCategoryQueue() {
-  state.categoryQueue = shuffle([1, 2, 3, 4, 5, 6]);
-}
+  state.categoryCounts = {};
 
-function getNextCategory() {
-  if (state.categoryQueue.length === 0) buildCategoryQueue();
-  return state.categoryQueue.pop();
+  data.categories.forEach(cat => {
+    state.categoryCounts[cat.id] = {
+      name: cat.name, color: cat.color, icon: cat.icon,
+      total: cat.cards.length, remaining: cat.cards.length
+    };
+
+    cat.cards.forEach((card, idx) => {
+      const isWild = card.text.startsWith('\ud83c\udccf WILD') || card.text.startsWith('WILD');
+      const isILoveYou = card.text.startsWith('\u2764\ufe0f I LOVE YOU') || card.text.startsWith('I LOVE YOU');
+
+      allCards.push({
+        categoryId: cat.id,
+        categoryName: cat.name,
+        categoryColor: cat.color,
+        categoryIcon: cat.icon,
+        cardIndex: idx,
+        text: card.text,
+        timer: card.timer || null,
+        tone: card.tone || null,
+        isWild: isWild,
+        isILoveYou: isILoveYou
+      });
+    });
+  });
+
+  state.masterDeck = shuffle(allCards);
+  state.totalRemaining = state.masterDeck.length;
 }
 
 let timerInterval = null;
@@ -141,90 +155,84 @@ io.on('connection', (socket) => {
     if (Array.isArray(players) && players.length >= 2) {
       state.players = players.map(p => String(p).trim()).filter(p => p.length > 0);
       state.currentPlayerIndex = 0;
-      state.lastRoll = null;
-      state.lastCategory = null;
       state.lastCard = null;
       state.phase = 'player-turn';
       state.round = 1;
 
-      // Build shuffled card decks per category
-      state.cardDecks = {};
       try {
-        const data = loadCards();
-        data.categories.forEach(cat => {
-          state.cardDecks[cat.id] = buildCardDeck(cat.cards);
-        });
+        buildMasterDeck();
       } catch (e) {
         console.log('Error loading cards:', e.message);
       }
-      buildCategoryQueue();
+
       io.emit('game-started', { state: getFullState() });
     } else {
       socket.emit('error-msg', { message: 'Need at least 2 players to start!' });
     }
   });
 
-  // Roll dice — picks a CATEGORY (shown after dice lands)
-  // Card TYPE (Wild/ILY/standard) remains hidden until reveal
+  // Roll dice — purely visual animation. Does NOT determine anything.
   socket.on('roll-dice', () => {
     if (state.phase !== 'player-turn') return;
 
-    const categoryId = getNextCategory();
-    try {
-      const data = loadCards();
-      const category = data.categories.find(c => c.id === categoryId);
-      state.lastRoll = categoryId;
-      state.lastCategory = category ? { id: category.id, name: category.name, color: category.color, icon: category.icon } : null;
-      state.lastCard = null;
-      state.phase = 'rolling';
-
-      // Send dice roll — category will be shown on dice face
-      io.emit('dice-result', { roll: categoryId, category: state.lastCategory, state: getFullState() });
-
-      // After dice animation (5.5s), transition to waiting-draw (face-down card, no category)
-      setTimeout(() => {
-        state.phase = 'waiting-draw';
-        io.emit('dice-settled', { state: getFullState() });
-      }, 5500);
-    } catch (err) {
-      socket.emit('error-msg', { message: err.message });
+    // Check if deck is empty
+    if (state.masterDeck.length === 0) {
+      state.phase = 'game-over';
+      io.emit('game-over', { state: getFullState() });
+      return;
     }
+
+    state.lastCard = null;
+    state.phase = 'rolling';
+
+    // Send dice roll event (purely visual)
+    io.emit('dice-result', { state: getFullState() });
+
+    // After dice animation (5.5s), transition to waiting-draw (face-down card)
+    setTimeout(() => {
+      state.phase = 'waiting-draw';
+      io.emit('dice-settled', { state: getFullState() });
+    }, 5500);
   });
 
-  // Reveal card — pop from category deck
-  // THIS is the only moment the card TYPE is revealed
+  // Reveal card — pop next card from the single shuffled master deck
+  // THIS is the ONLY moment ANY card info is revealed
   socket.on('draw-card', () => {
     if (state.phase !== 'waiting-draw') return;
 
-    try {
-      const data = loadCards();
-      const category = data.categories.find(c => c.id === state.lastRoll);
-      if (!category) return;
-
-      // Reshuffle if deck exhausted
-      if (!state.cardDecks[category.id] || state.cardDecks[category.id].length === 0) {
-        state.cardDecks[category.id] = buildCardDeck(category.cards);
-      }
-
-      const pickedIndex = state.cardDecks[category.id].pop();
-      const picked = category.cards[pickedIndex];
-
-      const isWild = picked.text.startsWith('\ud83c\udccf WILD') || picked.text.startsWith('WILD');
-      const isILoveYou = picked.text.startsWith('\u2764\ufe0f I LOVE YOU') || picked.text.startsWith('I LOVE YOU');
-
-      state.lastCard = {
-        text: picked.text,
-        category: state.lastCategory,
-        timer: picked.timer || null,
-        tone: picked.tone || null,
-        isWild: isWild,
-        isILoveYou: isILoveYou
-      };
-      state.phase = 'card-reveal';
-      io.emit('card-drawn', { card: state.lastCard, state: getFullState() });
-    } catch (err) {
-      socket.emit('error-msg', { message: err.message });
+    // Check if deck is empty
+    if (state.masterDeck.length === 0) {
+      state.phase = 'game-over';
+      io.emit('game-over', { state: getFullState() });
+      return;
     }
+
+    // Pop next card from shuffled deck
+    const card = state.masterDeck.pop();
+
+    // Update per-category count
+    if (state.categoryCounts[card.categoryId]) {
+      state.categoryCounts[card.categoryId].remaining--;
+    }
+    state.totalRemaining = state.masterDeck.length;
+
+    state.lastCard = {
+      text: card.text,
+      category: {
+        id: card.categoryId,
+        name: card.categoryName,
+        color: card.categoryColor,
+        icon: card.categoryIcon
+      },
+      timer: card.timer,
+      tone: card.tone,
+      isWild: card.isWild,
+      isILoveYou: card.isILoveYou
+    };
+    state.phase = 'card-reveal';
+
+    // NOW send card info (only now is it visible)
+    io.emit('card-drawn', { card: state.lastCard, state: getFullState() });
   });
 
   socket.on('start-timer', (data) => startTimer((data && data.seconds) || 30));
@@ -237,10 +245,15 @@ io.on('connection', (socket) => {
   });
 
   socket.on('next-player', () => {
+    // Check if deck is empty before moving to next player
+    if (state.masterDeck.length === 0) {
+      state.phase = 'game-over';
+      io.emit('game-over', { state: getFullState() });
+      return;
+    }
+
     state.currentPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
     if (state.currentPlayerIndex === 0) state.round++;
-    state.lastRoll = null;
-    state.lastCategory = null;
     state.lastCard = null;
     state.phase = 'player-turn';
     clearInterval(timerInterval);
@@ -257,11 +270,10 @@ io.on('connection', (socket) => {
     state.phase = 'setup';
     state.players = [];
     state.currentPlayerIndex = 0;
-    state.lastRoll = null;
-    state.lastCategory = null;
     state.lastCard = null;
-    state.cardDecks = {};
-    state.categoryQueue = [];
+    state.masterDeck = [];
+    state.categoryCounts = {};
+    state.totalRemaining = 0;
     state.round = 1;
     clearInterval(timerInterval);
     state.timerRunning = false;

@@ -114,6 +114,9 @@ function updateButtons(phase) {
     case 'turn-end':
       nextPlayerBtn.style.display = 'block';
       break;
+    case 'game-over':
+      // No buttons — game is done
+      break;
   }
   if (phase !== 'timer-running') {
     startTimerBtn.disabled = false;
@@ -134,10 +137,11 @@ const phaseLabels = {
   'setup': 'Setup',
   'player-turn': 'Waiting to roll',
   'rolling': 'Rolling dice...',
-  'waiting-draw': 'Ready to reveal card',
+  'waiting-draw': 'Card face-down — ready to reveal',
   'card-reveal': 'Card revealed',
   'timer-running': 'Timer running',
-  'turn-end': 'Turn complete'
+  'turn-end': 'Turn complete',
+  'game-over': 'Game Over — Deck Complete'
 };
 
 function updateUI(gameState) {
@@ -149,42 +153,59 @@ function updateUI(gameState) {
   updateButtons(gameState.phase);
   phaseDisplay.textContent = phaseLabels[gameState.phase] || gameState.phase;
 
-  // Show category after dice lands (visible in waiting-draw phase and after)
-  if (gameState.lastCategory) {
-    categoryDisplay.textContent = gameState.lastCategory.icon + ' ' + gameState.lastCategory.name;
-    categoryDisplay.style.color = gameState.lastCategory.color;
+  // CRITICAL: Host sees NO card info before reveal
+  // Before reveal: show "Face down" for both category and card
+  // After reveal: show category + card preview
+  if (gameState.phase === 'card-reveal' || gameState.phase === 'timer-running' || gameState.phase === 'turn-end') {
+    // Card has been revealed — show info
+    if (gameState.lastCard) {
+      const card = gameState.lastCard;
+      const cat = card.category;
+      categoryDisplay.textContent = cat.icon + ' ' + cat.name;
+      categoryDisplay.style.color = cat.color;
+
+      let label = card.text.substring(0, 50) + (card.text.length > 50 ? '...' : '');
+      if (card.isWild) label = '\ud83c\udccf WILD — ' + label;
+      if (card.isILoveYou) label = '\u2764\ufe0f I LOVE YOU — ' + label;
+      cardDisplay.textContent = label;
+    }
+  } else if (gameState.phase === 'waiting-draw') {
+    // Face-down — host sees NOTHING about the card
+    categoryDisplay.textContent = '? (hidden until reveal)';
+    categoryDisplay.style.color = '#666';
+    cardDisplay.textContent = '\ud83c\udccf Face down';
+  } else if (gameState.phase === 'game-over') {
+    categoryDisplay.textContent = '-';
+    categoryDisplay.style.color = '';
+    cardDisplay.textContent = 'Deck Complete — Game Over!';
   } else {
     categoryDisplay.textContent = '-';
     categoryDisplay.style.color = '';
-  }
-
-  // Show card info only after reveal
-  if (gameState.lastCard) {
-    const card = gameState.lastCard;
-    let label = card.text.substring(0, 50) + (card.text.length > 50 ? '...' : '');
-    if (card.isWild) label = '\ud83c\udccf WILD — ' + label;
-    if (card.isILoveYou) label = '\u2764\ufe0f I LOVE YOU — ' + label;
-    cardDisplay.textContent = label;
-  } else {
     cardDisplay.textContent = '-';
   }
 
-  // Per-category card counts
+  // Per-category card counts + total
   updateCardCounts(gameState);
 }
 
 function updateCardCounts(gameState) {
   cardCountsEl.innerHTML = '';
-  const catNames = ['Personal Call', 'Business Call', 'Text', 'Post', 'Confess It', 'Escalation'];
-  const counts = gameState.cardCounts || {};
+  const counts = gameState.categoryCounts || {};
 
-  for (let i = 1; i <= 6; i++) {
-    const remaining = counts[i] !== undefined ? counts[i] : 12;
+  for (const [catId, cat] of Object.entries(counts)) {
     const item = document.createElement('div');
     item.className = 'card-count-item';
-    item.innerHTML = `<span class="cat-name">${catNames[i - 1]}</span><span class="cat-count">${remaining}/12</span>`;
+    const remaining = cat.remaining !== undefined ? cat.remaining : cat.total;
+    item.innerHTML = `<span class="cat-name">${cat.name}</span><span class="cat-count">${remaining}/${cat.total}</span>`;
     cardCountsEl.appendChild(item);
   }
+
+  // Total deck count
+  const totalItem = document.createElement('div');
+  totalItem.className = 'card-count-item total-count';
+  const totalRemaining = gameState.totalRemaining !== undefined ? gameState.totalRemaining : '?';
+  totalItem.innerHTML = `<span class="cat-name"><strong>TOTAL DECK</strong></span><span class="cat-count"><strong>${totalRemaining}/72</strong></span>`;
+  cardCountsEl.appendChild(totalItem);
 }
 
 // Socket events
@@ -202,6 +223,7 @@ socket.on('timer-end', (data) => updateUI(data.state));
 socket.on('timer-stop', (data) => updateUI(data.state));
 socket.on('turn-completed', (data) => updateUI(data.state));
 socket.on('player-changed', (data) => updateUI(data.state));
+socket.on('game-over', (data) => updateUI(data.state));
 socket.on('error-msg', (data) => {
   errorMsgEl.textContent = data.message;
   errorMsgEl.style.display = 'block';

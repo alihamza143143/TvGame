@@ -467,3 +467,30 @@ body {
   color: #888;
   margin-top: 1vh;
 }
+
+/* ============ GAME OVER SCREEN ============ */
+.game-over-content {
+  text-align: center;
+  animation: categoryBurst 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.game-over-emoji {
+  font-size: clamp(6rem, 15vw, 12rem);
+  margin-bottom: 4vh;
+}
+
+.game-over-title {
+  font-size: clamp(4rem, 10vw, 8rem);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 8px;
+  color: #E74C3C;
+  text-shadow: 0 0 40px rgba(231, 76, 60, 0.5);
+}
+
+.game-over-subtitle {
+  font-size: clamp(1.5rem, 3vw, 2.5rem);
+  color: #888;
+  margin-top: 2vh;
+  font-weight: 600;
+}
